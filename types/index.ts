@@ -57,7 +57,9 @@ export interface CreditCard {
   hotelRewardRate?: number;
   benefits?: CardBenefit[];
   rewardsBalance?: RewardsBalance;
-  pinnedRates?: boolean;    // if true, admin template updates won't overwrite this card's rates
+  pinnedRates?: boolean;
+  templateId?: string;         // links to master catalog — enables update tracking
+  templateUpdatedAt?: string | null;  // set by server when admin updates the template
 }
 
 export interface StoreVisit {

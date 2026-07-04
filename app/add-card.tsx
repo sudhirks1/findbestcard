@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,6 @@ import { useAuthStore } from '../store/useAuthStore';
 import * as api from '../utils/api';
 import { COLORS, CATEGORY_META, CARD_COLOR_SCHEMES, ALL_CATEGORIES } from '../utils/constants';
 import { StoreCategory, CardNetwork, RewardType, CategoryReward, CardBenefit } from '../types';
-import { findCardTemplate } from '../utils/cardDatabase';
 
 const NETWORKS: { key: CardNetwork; label: string }[] = [
   { key: 'visa', label: 'Visa' },
@@ -57,6 +56,32 @@ export default function AddCardScreen() {
     isEditing && validSteps.includes(startStep as Step) ? (startStep as Step) : 'basic'
   );
 
+  // Backend card templates for autofill
+  const [catalogTemplates, setCatalogTemplates] = useState<any[]>([]);
+  const [autoFillSuggestion, setAutoFillSuggestion] = useState<ReturnType<typeof api.serverTemplateToAutofill> | null>(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(editingCard?.templateId);
+
+  useEffect(() => {
+    api.getCardTemplates().then(setCatalogTemplates).catch(() => {});
+  }, []);
+
+  function findTemplate(query: string) {
+    const lower = query.toLowerCase().trim();
+    if (!lower || catalogTemplates.length === 0) return null;
+    // exact name/issuer substring match first
+    let found = catalogTemplates.find(
+      (t) => t.name.toLowerCase().includes(lower) || lower.includes(t.name.toLowerCase())
+    );
+    if (!found) {
+      // fuzzy: 2+ words of name appear in query
+      found = catalogTemplates.find((t) => {
+        const words = t.name.toLowerCase().split(' ').filter((w: string) => w.length > 3);
+        return words.filter((w: string) => lower.includes(w)).length >= 2;
+      });
+    }
+    return found ? api.serverTemplateToAutofill(found) : null;
+  }
+
   // Basic info
   const [nickname, setNickname] = useState(editingCard?.nickname ?? '');
   const [bank, setBank] = useState(editingCard?.bank ?? '');
@@ -65,7 +90,6 @@ export default function AddCardScreen() {
   const [colorScheme, setColorScheme] = useState(editingCard?.colorScheme ?? COLOR_KEYS[0]);
   const [annualFee, setAnnualFee] = useState(String(editingCard?.annualFee ?? 0));
   const [isHSAFSA, setIsHSAFSA] = useState(editingCard?.isHSAFSA ?? false);
-  const [autoFillSuggestion, setAutoFillSuggestion] = useState<ReturnType<typeof findCardTemplate>>(null);
 
   // Benefits
   const [benefits, setBenefits] = useState<CardBenefit[]>(editingCard?.benefits ?? []);
@@ -195,6 +219,7 @@ export default function AddCardScreen() {
       isHSAFSA,
       hotelRewardRate: hotelRate && !isNaN(hotelRate) ? hotelRate : undefined,
       benefits: benefits.length > 0 ? benefits : undefined,
+      templateId: selectedTemplateId,
     };
     if (isEditing && editingCard) {
       updateCard(editingCard.id, payload);
@@ -242,7 +267,7 @@ export default function AddCardScreen() {
                 value={nickname}
                 onChangeText={(text) => {
                   setNickname(text);
-                  if (!isEditing) setAutoFillSuggestion(findCardTemplate(text));
+                  if (!isEditing) setAutoFillSuggestion(findTemplate(text));
                 }}
                 placeholder="Chase Sapphire Preferred"
                 placeholderTextColor={COLORS.textMuted}
@@ -253,18 +278,16 @@ export default function AddCardScreen() {
               <TouchableOpacity
                 style={styles.autoFillBanner}
                 onPress={() => {
-                  const t = autoFillSuggestion;
+                  const t = autoFillSuggestion!;
                   setNickname(t.name);
                   setBank(t.bank);
-                  setNetwork(t.network);
                   setColorScheme(t.colorScheme);
                   setAnnualFee(String(t.annualFee));
                   setBaseReward(String(t.baseReward));
-                  setBaseRewardType(t.baseRewardType);
+                  setBaseRewardType(t.baseRewardType as RewardType);
                   setCategoryRewards(t.rewards as CategoryReward[]);
-                  if (t.hotelRewardRate) setHotelRewardRate(String(t.hotelRewardRate));
-                  if (t.benefits) setBenefits(t.benefits);
-                  setNotes(t.notes);
+                  if (t.benefits) setBenefits(t.benefits as CardBenefit[]);
+                  setSelectedTemplateId(t.templateId);
                   setAutoFillSuggestion(null);
                 }}
                 activeOpacity={0.85}
