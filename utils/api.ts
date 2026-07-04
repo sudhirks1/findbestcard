@@ -239,6 +239,16 @@ export async function applyCardTemplate(token: string, cardId: string): Promise<
   return apiFetch(`/wallet/${cardId}/apply-template`, { method: 'POST' }, token);
 }
 
+// AI-powered card lookup — returns template (created in DB) or null
+export async function aiLookupCard(token: string, cardName: string): Promise<any | null> {
+  try {
+    const data = await apiFetch('/card-templates/ai-lookup', { method: 'POST', body: JSON.stringify({ name: cardName }) }, token);
+    return data ?? null;
+  } catch {
+    return null;
+  }
+}
+
 // Convert a backend card_template row into the autofill shape used by add-card
 export function serverTemplateToAutofill(t: any) {
   const colToCategory: Record<string, string> = {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -59,7 +59,10 @@ export default function AddCardScreen() {
   // Backend card templates for autofill
   const [catalogTemplates, setCatalogTemplates] = useState<any[]>([]);
   const [autoFillSuggestion, setAutoFillSuggestion] = useState<ReturnType<typeof api.serverTemplateToAutofill> | null>(null);
+  const [aiSuggestion, setAiSuggestion] = useState<ReturnType<typeof api.serverTemplateToAutofill> | null>(null);
+  const [aiLookupLoading, setAiLookupLoading] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(editingCard?.templateId);
+  const aiDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     api.getCardTemplates().then(setCatalogTemplates).catch(() => {});
@@ -267,7 +270,24 @@ export default function AddCardScreen() {
                 value={nickname}
                 onChangeText={(text) => {
                   setNickname(text);
-                  if (!isEditing) setAutoFillSuggestion(findTemplate(text));
+                  if (isEditing) return;
+
+                  const catalogMatch = findTemplate(text);
+                  setAutoFillSuggestion(catalogMatch);
+                  setAiSuggestion(null);
+
+                  if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
+
+                  if (!catalogMatch && text.trim().length > 4 && token) {
+                    aiDebounceRef.current = setTimeout(async () => {
+                      setAiLookupLoading(true);
+                      const result = await api.aiLookupCard(token, text.trim());
+                      setAiLookupLoading(false);
+                      if (result) setAiSuggestion(api.serverTemplateToAutofill(result));
+                    }, 1500);
+                  } else {
+                    setAiLookupLoading(false);
+                  }
                 }}
                 placeholder="Chase Sapphire Preferred"
                 placeholderTextColor={COLORS.textMuted}
@@ -298,6 +318,40 @@ export default function AddCardScreen() {
                   <Text style={styles.autoFillSub}>Tap to auto-fill rewards — you can edit after</Text>
                 </View>
                 <Text style={styles.autoFillChevron}>→</Text>
+              </TouchableOpacity>
+            )}
+
+            {aiLookupLoading && !autoFillSuggestion && !isEditing && (
+              <View style={styles.aiLoadingBanner}>
+                <ActivityIndicator size="small" color="#F59E0B" />
+                <Text style={styles.aiLoadingText}>Searching AI for card rates...</Text>
+              </View>
+            )}
+
+            {aiSuggestion && !autoFillSuggestion && !isEditing && (
+              <TouchableOpacity
+                style={styles.aiBanner}
+                onPress={() => {
+                  const t = aiSuggestion!;
+                  setNickname(t.name);
+                  setBank(t.bank);
+                  setColorScheme(t.colorScheme);
+                  setAnnualFee(String(t.annualFee));
+                  setBaseReward(String(t.baseReward));
+                  setBaseRewardType(t.baseRewardType as RewardType);
+                  setCategoryRewards(t.rewards as CategoryReward[]);
+                  if (t.benefits?.length) setBenefits(t.benefits as CardBenefit[]);
+                  setSelectedTemplateId(t.templateId);
+                  setAiSuggestion(null);
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.aiBannerIcon}>🤖</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.aiBannerTitle}>AI found: {aiSuggestion.name}</Text>
+                  <Text style={styles.aiBannerSub}>Tap to apply rates — review before saving</Text>
+                </View>
+                <Text style={styles.aiBannerChevron}>→</Text>
               </TouchableOpacity>
             )}
             <Field label="Bank / Issuer">
@@ -1054,4 +1108,29 @@ const styles = StyleSheet.create({
   autoFillTitle: { color: '#34D399', fontSize: 14, fontWeight: '700' },
   autoFillSub: { color: COLORS.textMuted, fontSize: 11, marginTop: 2 },
   autoFillChevron: { color: '#34D399', fontSize: 18, fontWeight: '700' },
+  aiLoadingBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: 'rgba(245,158,11,0.08)',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(245,158,11,0.3)',
+  },
+  aiLoadingText: { color: '#F59E0B', fontSize: 13, fontWeight: '600' },
+  aiBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(245,158,11,0.1)',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
+  aiBannerIcon: { fontSize: 22 },
+  aiBannerTitle: { color: '#F59E0B', fontSize: 14, fontWeight: '700' },
+  aiBannerSub: { color: COLORS.textMuted, fontSize: 11, marginTop: 2 },
+  aiBannerChevron: { color: '#F59E0B', fontSize: 18, fontWeight: '700' },
 });
