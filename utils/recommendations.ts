@@ -48,29 +48,6 @@ export function rankCards(
 ): CardScore[] {
   if (!cards.length) return [];
 
-  // For Pharmacy & Medical, always pin the HSA/FSA card first regardless of reward rates
-  if (category === 'pharmacy') {
-    const hsaCard = cards.find((c) => c.isHSAFSA);
-    if (hsaCard) {
-      const hsaScore: CardScore = {
-        card: hsaCard,
-        rewardRate: hsaCard.baseReward,
-        rewardType: hsaCard.baseRewardType,
-        isRecommended: true,
-        habitBoost: false,
-        baseUsed: true,
-        hotelSpecialist: false,
-      };
-      const rest = cards
-        .filter((c) => !c.isHSAFSA)
-        .map((card): CardScore => {
-          const { rate, type, baseUsed } = getCardRateForCategory(card, category);
-          return { card, rewardRate: rate, rewardType: type, isRecommended: false, habitBoost: false, baseUsed, hotelSpecialist: !!(card.hotelRewardRate) };
-        });
-      return [hsaScore, ...rest];
-    }
-  }
-
   const scores = cards.map((card): CardScore => {
     const { rate, type, baseUsed } = getCardRateForCategory(card, category);
     const normalized = normalizeRate(rate, type);

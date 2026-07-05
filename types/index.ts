@@ -53,7 +53,6 @@ export interface CreditCard {
   annualFee: number;
   notes?: string;
   createdAt: number;
-  isHSAFSA?: boolean;
   hasQuarterlyRotatingRewards?: boolean;
   requiresPrimeMembership?: boolean;
   hotelRewardRate?: number;

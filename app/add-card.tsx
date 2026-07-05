@@ -404,41 +404,41 @@ const openEditBenefit = (idx: number) => {
             </Field>
             <Field label="Quarterly Rotating Rewards">
               <TouchableOpacity
-                style={[styles.hsaToggle, hasQuarterlyRotating && styles.flagToggleActive]}
+                style={[styles.toggleRow, hasQuarterlyRotating && styles.flagToggleActive]}
                 onPress={() => setHasQuarterlyRotating((v) => !v)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.hsaToggleEmoji}>🔄</Text>
+                <Text style={styles.toggleEmoji}>🔄</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.hsaToggleLabel, hasQuarterlyRotating && styles.flagToggleLabelActive]}>
+                  <Text style={[styles.toggleLabel, hasQuarterlyRotating && styles.flagToggleLabelActive]}>
                     Has quarterly rotating categories
                   </Text>
-                  <Text style={styles.hsaToggleSub}>
+                  <Text style={styles.toggleSub}>
                     e.g. Discover it — 5% categories change each quarter
                   </Text>
                 </View>
-                <View style={[styles.hsaCheckbox, hasQuarterlyRotating && styles.flagCheckboxActive]}>
-                  {hasQuarterlyRotating && <Text style={styles.hsaCheckmark}>✓</Text>}
+                <View style={[styles.toggleCheckbox, hasQuarterlyRotating && styles.flagCheckboxActive]}>
+                  {hasQuarterlyRotating && <Text style={styles.toggleCheckmark}>✓</Text>}
                 </View>
               </TouchableOpacity>
             </Field>
             <Field label="Amazon Prime Required">
               <TouchableOpacity
-                style={[styles.hsaToggle, requiresPrime && styles.primeToggleActive]}
+                style={[styles.toggleRow, requiresPrime && styles.primeToggleActive]}
                 onPress={() => setRequiresPrime((v) => !v)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.hsaToggleEmoji}>📦</Text>
+                <Text style={styles.toggleEmoji}>📦</Text>
                 <View style={{ flex: 1 }}>
-                  <Text style={[styles.hsaToggleLabel, requiresPrime && styles.primeToggleLabelActive]}>
+                  <Text style={[styles.toggleLabel, requiresPrime && styles.primeToggleLabelActive]}>
                     Best rates require Prime membership
                   </Text>
-                  <Text style={styles.hsaToggleSub}>
+                  <Text style={styles.toggleSub}>
                     e.g. Amazon Prime Visa — 5% only with active Prime
                   </Text>
                 </View>
-                <View style={[styles.hsaCheckbox, requiresPrime && styles.primeCheckboxActive]}>
-                  {requiresPrime && <Text style={styles.hsaCheckmark}>✓</Text>}
+                <View style={[styles.toggleCheckbox, requiresPrime && styles.primeCheckboxActive]}>
+                  {requiresPrime && <Text style={styles.toggleCheckmark}>✓</Text>}
                 </View>
               </TouchableOpacity>
             </Field>
@@ -1009,7 +1009,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveBtnText: { color: '#FFF', fontSize: 16, fontWeight: '800' },
-  hsaToggle: {
+  toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
@@ -1019,15 +1019,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.surfaceBorder,
   },
-  hsaToggleActive: {
-    backgroundColor: 'rgba(16,185,129,0.1)',
-    borderColor: '#10B981',
-  },
-  hsaToggleEmoji: { fontSize: 22 },
-  hsaToggleLabel: { color: COLORS.textSecondary, fontSize: 14, fontWeight: '600' },
-  hsaToggleLabelActive: { color: '#10B981' },
-  hsaToggleSub: { color: COLORS.textMuted, fontSize: 11, marginTop: 2 },
-  hsaCheckbox: {
+  toggleEmoji: { fontSize: 22 },
+  toggleLabel: { color: COLORS.textSecondary, fontSize: 14, fontWeight: '600' },
+  toggleSub: { color: COLORS.textMuted, fontSize: 11, marginTop: 2 },
+  toggleCheckbox: {
     width: 24,
     height: 24,
     borderRadius: 6,
@@ -1036,11 +1031,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  hsaCheckboxActive: {
-    backgroundColor: '#10B981',
-    borderColor: '#10B981',
-  },
-  hsaCheckmark: { color: '#FFF', fontSize: 14, fontWeight: '800' },
+  toggleCheckmark: { color: '#FFF', fontSize: 14, fontWeight: '800' },
   // Quarterly rotating toggle (blue-ish)
   flagToggleActive: {
     backgroundColor: 'rgba(99,102,241,0.1)',

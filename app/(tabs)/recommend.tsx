@@ -179,18 +179,9 @@ export default function RecommendScreen() {
                   <Text style={styles.recStar}>⭐</Text>
                   <Text style={styles.recText}>Best Points / Miles Card</Text>
                 </View>
-                {pick.card.isHSAFSA && (
-                  <View style={styles.hsaBanner}>
-                    <Text style={styles.hsaBannerIcon}>🏥</Text>
-                    <View>
-                      <Text style={styles.hsaBannerTitle}>HSA / FSA Card</Text>
-                      <Text style={styles.hsaBannerSub}>Pay pre-tax — saves 20–37% on medical expenses</Text>
-                    </View>
-                  </View>
-                )}
                 <CreditCardView card={pick.card} />
                 <GlassContainer style={styles.recDetails}>
-                  <Text style={styles.recRate}>{pick.card.isHSAFSA ? 'Pre-tax' : getRewardDisplay(pick.rewardRate, pick.rewardType)}</Text>
+                  <Text style={styles.recRate}>{getRewardDisplay(pick.rewardRate, pick.rewardType)}</Text>
                   <Text style={styles.recRateLabel}>at {selectedCategory ? CATEGORY_META[selectedCategory].label : ''}</Text>
                   {pick.habitBoost && <Text style={styles.habitNote}>★ Matches your spending habits</Text>}
                 </GlassContainer>
@@ -207,18 +198,9 @@ export default function RecommendScreen() {
                   <Text style={styles.recStar}>💵</Text>
                   <Text style={styles.recText}>Best Cash Back Card</Text>
                 </View>
-                {pick.card.isHSAFSA && (
-                  <View style={styles.hsaBanner}>
-                    <Text style={styles.hsaBannerIcon}>🏥</Text>
-                    <View>
-                      <Text style={styles.hsaBannerTitle}>HSA / FSA Card</Text>
-                      <Text style={styles.hsaBannerSub}>Pay pre-tax — saves 20–37% on medical expenses</Text>
-                    </View>
-                  </View>
-                )}
                 <CreditCardView card={pick.card} />
                 <GlassContainer style={styles.recDetails}>
-                  <Text style={styles.recRate}>{pick.card.isHSAFSA ? 'Pre-tax' : getRewardDisplay(pick.rewardRate, pick.rewardType)}</Text>
+                  <Text style={styles.recRate}>{getRewardDisplay(pick.rewardRate, pick.rewardType)}</Text>
                   <Text style={styles.recRateLabel}>at {selectedCategory ? CATEGORY_META[selectedCategory].label : ''}</Text>
                   {pick.habitBoost && <Text style={styles.habitNote}>★ Matches your spending habits</Text>}
                 </GlassContainer>
@@ -235,7 +217,7 @@ export default function RecommendScreen() {
               </View>
               <CreditCardView card={localTop.card} />
               <GlassContainer style={styles.recDetails}>
-                <Text style={styles.recRate}>{localTop.card.isHSAFSA ? 'Pre-tax' : getRewardDisplay(localTop.rewardRate, localTop.rewardType)}</Text>
+                <Text style={styles.recRate}>{getRewardDisplay(localTop.rewardRate, localTop.rewardType)}</Text>
                 <Text style={styles.recRateLabel}>at {selectedCategory ? CATEGORY_META[selectedCategory].label : ''}</Text>
               </GlassContainer>
             </View>
@@ -460,19 +442,6 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   recommendedSection: { gap: 12 },
-  hsaBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: 'rgba(16,185,129,0.12)',
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#10B981',
-  },
-  hsaBannerIcon: { fontSize: 26 },
-  hsaBannerTitle: { color: '#34D399', fontSize: 14, fontWeight: '800' },
-  hsaBannerSub: { color: 'rgba(255,255,255,0.55)', fontSize: 12, marginTop: 2 },
   recLabel: {
     flexDirection: 'row',
     alignItems: 'center',
