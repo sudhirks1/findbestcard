@@ -92,7 +92,6 @@ export default function AddCardScreen() {
   const [network, setNetwork] = useState<CardNetwork>(editingCard?.network ?? 'visa');
   const [colorScheme, setColorScheme] = useState(editingCard?.colorScheme ?? COLOR_KEYS[0]);
   const [annualFee, setAnnualFee] = useState(String(editingCard?.annualFee ?? 0));
-  const [isHSAFSA, setIsHSAFSA] = useState(editingCard?.isHSAFSA ?? false);
   const [hasQuarterlyRotating, setHasQuarterlyRotating] = useState(editingCard?.hasQuarterlyRotatingRewards ?? false);
   const [requiresPrime, setRequiresPrime] = useState(editingCard?.requiresPrimeMembership ?? false);
 
@@ -195,7 +194,6 @@ const openEditBenefit = (idx: number) => {
       baseRewardType,
       rewards: categoryRewards,
       notes: notes.trim(),
-      isHSAFSA,
       hasQuarterlyRotatingRewards: hasQuarterlyRotating,
       requiresPrimeMembership: requiresPrime,
       hotelRewardRate: hotelRate && !isNaN(hotelRate) ? hotelRate : undefined,
@@ -403,26 +401,6 @@ const openEditBenefit = (idx: number) => {
                 placeholder="0"
                 placeholderTextColor={COLORS.textMuted}
               />
-            </Field>
-            <Field label="HSA / FSA Card">
-              <TouchableOpacity
-                style={[styles.hsaToggle, isHSAFSA && styles.hsaToggleActive]}
-                onPress={() => setIsHSAFSA((v) => !v)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.hsaToggleEmoji}>🏥</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.hsaToggleLabel, isHSAFSA && styles.hsaToggleLabelActive]}>
-                    This is an HSA or FSA card
-                  </Text>
-                  <Text style={styles.hsaToggleSub}>
-                    Will always be recommended for Pharmacy & Medical
-                  </Text>
-                </View>
-                <View style={[styles.hsaCheckbox, isHSAFSA && styles.hsaCheckboxActive]}>
-                  {isHSAFSA && <Text style={styles.hsaCheckmark}>✓</Text>}
-                </View>
-              </TouchableOpacity>
             </Field>
             <Field label="Quarterly Rotating Rewards">
               <TouchableOpacity
@@ -774,7 +752,6 @@ const openEditBenefit = (idx: number) => {
                   value={`${r.rewardRate}${r.rewardType === 'cashback' ? '%' : 'x'} ${r.rewardType}`}
                 />
               ))}
-              {isHSAFSA ? <ConfirmRow label="Type" value="🏥 HSA / FSA Card" /> : null}
               {hotelRewardRate ? <ConfirmRow label="🏨 Hotel Reward" value={`${hotelRewardRate}x (secondary priority)`} /> : null}
               {benefits.map((b, i) => {
                 const annual = b.period === 'monthly' ? b.value * 12 : b.value;
