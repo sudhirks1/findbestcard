@@ -198,8 +198,9 @@ export async function deleteQuestion(token: string, id: string): Promise<void> {
 }
 
 // AI
-export async function askAI(token: string, question: string): Promise<string> {
-  const data = await apiFetch('/ai/ask', { method: 'POST', body: JSON.stringify({ question }) }, token);
+type ChatMessage = { role: 'user' | 'assistant'; content: string };
+export async function askAI(token: string, question: string, history: ChatMessage[] = []): Promise<string> {
+  const data = await apiFetch('/ai/ask', { method: 'POST', body: JSON.stringify({ question, history }) }, token);
   return data.answer as string;
 }
 
