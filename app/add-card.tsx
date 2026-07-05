@@ -10,7 +10,7 @@ import {
   Platform,
   Alert,
   StatusBar,
-  ActivityIndicator,
+  ActivityIndicator, // still used for AI lookup loading
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -93,12 +93,13 @@ export default function AddCardScreen() {
   const [colorScheme, setColorScheme] = useState(editingCard?.colorScheme ?? COLOR_KEYS[0]);
   const [annualFee, setAnnualFee] = useState(String(editingCard?.annualFee ?? 0));
   const [isHSAFSA, setIsHSAFSA] = useState(editingCard?.isHSAFSA ?? false);
+  const [hasQuarterlyRotating, setHasQuarterlyRotating] = useState(editingCard?.hasQuarterlyRotatingRewards ?? false);
+  const [requiresPrime, setRequiresPrime] = useState(editingCard?.requiresPrimeMembership ?? false);
 
   // Benefits
   const [benefits, setBenefits] = useState<CardBenefit[]>(editingCard?.benefits ?? []);
   const [addingBenefit, setAddingBenefit] = useState(false);
   const [editingBenefitIdx, setEditingBenefitIdx] = useState<number | null>(null);
-  const [fetchingBenefits, setFetchingBenefits] = useState(false);
   const [benefitLabel, setBenefitLabel] = useState('');
   const [benefitValue, setBenefitValue] = useState('');
   const [benefitPeriod, setBenefitPeriod] = useState<CardBenefit['period']>('annual');
@@ -135,32 +136,7 @@ export default function AddCardScreen() {
     setCategoryRewards((prev) => prev.filter((r) => r.category !== cat));
   };
 
-  const handleAIFetchBenefits = async () => {
-    if (!nickname.trim()) {
-      Alert.alert('Card Name Needed', 'Enter the card name first so Claude knows which card to look up.');
-      return;
-    }
-    if (!token) return;
-    setFetchingBenefits(true);
-    try {
-      const fetched = await api.fetchCardBenefits(token, nickname.trim());
-      if (fetched.length === 0) {
-        Alert.alert('No Benefits Found', `No known credits for "${nickname}". You can add them manually.`);
-        return;
-      }
-      const valid = (fetched as CardBenefit[]).filter(
-        (b) => typeof b.label === 'string' && typeof b.value === 'number' && (b.period === 'monthly' || b.period === 'annual')
-      );
-      setBenefits(valid);
-      Alert.alert('Benefits Fetched!', `Found ${valid.length} credit${valid.length !== 1 ? 's' : ''} for ${nickname}. Review and edit below.`);
-    } catch (e: any) {
-      Alert.alert('Could not fetch', e?.message ?? 'Try again or add benefits manually.');
-    } finally {
-      setFetchingBenefits(false);
-    }
-  };
-
-  const openEditBenefit = (idx: number) => {
+const openEditBenefit = (idx: number) => {
     const b = benefits[idx];
     setBenefitLabel(b.label);
     setBenefitValue(String(b.value));
@@ -220,6 +196,8 @@ export default function AddCardScreen() {
       rewards: categoryRewards,
       notes: notes.trim(),
       isHSAFSA,
+      hasQuarterlyRotatingRewards: hasQuarterlyRotating,
+      requiresPrimeMembership: requiresPrime,
       hotelRewardRate: hotelRate && !isNaN(hotelRate) ? hotelRate : undefined,
       benefits: benefits.length > 0 ? benefits : undefined,
       templateId: selectedTemplateId,
@@ -308,6 +286,8 @@ export default function AddCardScreen() {
                   setCategoryRewards(t.rewards as CategoryReward[]);
                   if (t.benefits) setBenefits(t.benefits as CardBenefit[]);
                   setSelectedTemplateId(t.templateId);
+                  setHasQuarterlyRotating(t.hasQuarterlyRotatingRewards ?? false);
+                  setRequiresPrime(t.requiresPrimeMembership ?? false);
                   setAutoFillSuggestion(null);
                 }}
                 activeOpacity={0.85}
@@ -342,6 +322,8 @@ export default function AddCardScreen() {
                   setCategoryRewards(t.rewards as CategoryReward[]);
                   if (t.benefits?.length) setBenefits(t.benefits as CardBenefit[]);
                   setSelectedTemplateId(t.templateId);
+                  setHasQuarterlyRotating(t.hasQuarterlyRotatingRewards ?? false);
+                  setRequiresPrime(t.requiresPrimeMembership ?? false);
                   setAiSuggestion(null);
                 }}
                 activeOpacity={0.85}
@@ -439,6 +421,46 @@ export default function AddCardScreen() {
                 </View>
                 <View style={[styles.hsaCheckbox, isHSAFSA && styles.hsaCheckboxActive]}>
                   {isHSAFSA && <Text style={styles.hsaCheckmark}>✓</Text>}
+                </View>
+              </TouchableOpacity>
+            </Field>
+            <Field label="Quarterly Rotating Rewards">
+              <TouchableOpacity
+                style={[styles.hsaToggle, hasQuarterlyRotating && styles.flagToggleActive]}
+                onPress={() => setHasQuarterlyRotating((v) => !v)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.hsaToggleEmoji}>🔄</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.hsaToggleLabel, hasQuarterlyRotating && styles.flagToggleLabelActive]}>
+                    Has quarterly rotating categories
+                  </Text>
+                  <Text style={styles.hsaToggleSub}>
+                    e.g. Discover it — 5% categories change each quarter
+                  </Text>
+                </View>
+                <View style={[styles.hsaCheckbox, hasQuarterlyRotating && styles.flagCheckboxActive]}>
+                  {hasQuarterlyRotating && <Text style={styles.hsaCheckmark}>✓</Text>}
+                </View>
+              </TouchableOpacity>
+            </Field>
+            <Field label="Amazon Prime Required">
+              <TouchableOpacity
+                style={[styles.hsaToggle, requiresPrime && styles.primeToggleActive]}
+                onPress={() => setRequiresPrime((v) => !v)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.hsaToggleEmoji}>📦</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.hsaToggleLabel, requiresPrime && styles.primeToggleLabelActive]}>
+                    Best rates require Prime membership
+                  </Text>
+                  <Text style={styles.hsaToggleSub}>
+                    e.g. Amazon Prime Visa — 5% only with active Prime
+                  </Text>
+                </View>
+                <View style={[styles.hsaCheckbox, requiresPrime && styles.primeCheckboxActive]}>
+                  {requiresPrime && <Text style={styles.hsaCheckmark}>✓</Text>}
                 </View>
               </TouchableOpacity>
             </Field>
@@ -650,7 +672,6 @@ export default function AddCardScreen() {
               </View>
             )}
 
-            {/* Add benefit form */}
             {addingBenefit ? (
               <View style={styles.editCatForm}>
                 <Text style={styles.editCatTitle}>{editingBenefitIdx !== null ? 'Edit Benefit' : 'New Benefit'}</Text>
@@ -703,28 +724,13 @@ export default function AddCardScreen() {
                 </View>
               </View>
             ) : (
-              <View style={styles.benefitActions}>
-                {/* AI fetch button — shown when we have a name and no form is open */}
-                <TouchableOpacity
-                  style={[styles.aiFetchBtn, fetchingBenefits && styles.aiFetchBtnLoading]}
-                  onPress={handleAIFetchBenefits}
-                  activeOpacity={0.85}
-                  disabled={fetchingBenefits}
-                >
-                  {fetchingBenefits ? (
-                    <ActivityIndicator size="small" color={COLORS.accentLight} />
-                  ) : (
-                    <Text style={styles.aiFetchBtnText}>✨ Fetch Benefits with AI</Text>
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.addBenefitBtn}
-                  onPress={() => setAddingBenefit(true)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={styles.addBenefitBtnText}>+ Add Manually</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                style={styles.addBenefitBtn}
+                onPress={() => setAddingBenefit(true)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.addBenefitBtnText}>+ Add Benefit</Text>
+              </TouchableOpacity>
             )}
 
             <View style={styles.navRow}>
@@ -1058,20 +1064,26 @@ const styles = StyleSheet.create({
     borderColor: '#10B981',
   },
   hsaCheckmark: { color: '#FFF', fontSize: 14, fontWeight: '800' },
-  benefitActions: { gap: 10 },
-  aiFetchBtn: {
-    backgroundColor: 'rgba(52,211,153,0.12)',
-    borderWidth: 1,
-    borderColor: COLORS.accentLight + '55',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
+  // Quarterly rotating toggle (blue-ish)
+  flagToggleActive: {
+    backgroundColor: 'rgba(99,102,241,0.1)',
+    borderColor: '#818CF8',
   },
-  aiFetchBtnLoading: { opacity: 0.6 },
-  aiFetchBtnText: { color: COLORS.accentLight, fontSize: 14, fontWeight: '700' },
+  flagToggleLabelActive: { color: '#818CF8' },
+  flagCheckboxActive: {
+    backgroundColor: '#818CF8',
+    borderColor: '#818CF8',
+  },
+  // Prime membership toggle (amber)
+  primeToggleActive: {
+    backgroundColor: 'rgba(245,158,11,0.1)',
+    borderColor: '#F59E0B',
+  },
+  primeToggleLabelActive: { color: '#F59E0B' },
+  primeCheckboxActive: {
+    backgroundColor: '#F59E0B',
+    borderColor: '#F59E0B',
+  },
   addBenefitBtn: {
     borderWidth: 1,
     borderColor: COLORS.surfaceBorder,

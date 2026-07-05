@@ -54,6 +54,8 @@ export interface CreditCard {
   notes?: string;
   createdAt: number;
   isHSAFSA?: boolean;
+  hasQuarterlyRotatingRewards?: boolean;
+  requiresPrimeMembership?: boolean;
   hotelRewardRate?: number;
   benefits?: CardBenefit[];
   rewardsBalance?: RewardsBalance;

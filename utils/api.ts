@@ -77,6 +77,8 @@ export function serverCardToLocal(s: any): CreditCard {
     notes: s.notes,
     createdAt: s.createdAt ? new Date(s.createdAt).getTime() : Date.now(),
     isHSAFSA: s.isHSAFSA || false,
+    hasQuarterlyRotatingRewards: s.hasQuarterlyRotatingRewards || false,
+    requiresPrimeMembership: s.requiresPrimeMembership || false,
     hotelRewardRate: s.hotelsRate ? Number(s.hotelsRate) : undefined,
     benefits: s.benefits as CardBenefit[] | undefined,
     rewardsBalance:
@@ -107,6 +109,8 @@ export function localCardToServer(card: CreditCard, sortOrder = 0): object {
     annualFee: card.annualFee,
     notes: card.notes,
     isHSAFSA: card.isHSAFSA || false,
+    hasQuarterlyRotatingRewards: card.hasQuarterlyRotatingRewards || false,
+    requiresPrimeMembership: card.requiresPrimeMembership || false,
     benefits: card.benefits || [],
     rewardsBalance: card.rewardsBalance?.amount ?? null,
     rewardsBalanceUpdatedAt: card.rewardsBalance?.updatedAt ?? null,
@@ -271,5 +275,7 @@ export function serverTemplateToAutofill(t: any) {
     baseRewardType: t.rewardType || 'cashback',
     rewards,
     benefits: t.benefits || [],
+    hasQuarterlyRotatingRewards: t.hasQuarterlyRotatingRewards || false,
+    requiresPrimeMembership: t.requiresPrimeMembership || false,
   };
 }
