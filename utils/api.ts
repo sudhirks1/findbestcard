@@ -230,7 +230,8 @@ export async function fetchCardBenefits(token: string, cardName: string): Promis
 }
 
 // AI card recommendation for a category
-export async function aiRecommend(token: string, category: string): Promise<{ cardId: string; cardName: string; reason: string; advice: string }> {
+type AiPick = { cardId: string; cardName: string; reason: string };
+export async function aiRecommend(token: string, category: string): Promise<{ points: AiPick | null; cashback: AiPick | null; advice: string }> {
   return apiFetch('/ai/recommend', { method: 'POST', body: JSON.stringify({ category }) }, token);
 }
 

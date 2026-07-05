@@ -35,7 +35,11 @@ export default function RecommendScreen() {
   const [selectedCategory, setSelectedCategory] = useState<StoreCategory | null>(null);
   const [scores, setScores] = useState<CardScore[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
-  const [aiResult, setAiResult] = useState<{ cardId: string; cardName: string; reason: string; advice: string } | null>(null);
+  const [aiResult, setAiResult] = useState<{
+    points: { cardId: string; cardName: string; reason: string } | null;
+    cashback: { cardId: string; cardName: string; reason: string } | null;
+    advice: string;
+  } | null>(null);
   const [pendingOverrideCardId, setPendingOverrideCardId] = useState<string | null>(null);
 
   const handleFind = async (cat: StoreCategory) => {
@@ -72,11 +76,12 @@ export default function RecommendScreen() {
 
   const finishRecord = (cardId: string, overrideReason?: string) => {
     if (!selectedCategory) return;
-    const recommended = scores.find((s) => s.isRecommended);
+    const aiTopId = aiResult?.points?.cardId ?? aiResult?.cashback?.cardId;
+    const recommendedCardId = aiTopId ?? scores.find((s) => s.isRecommended)?.card.id ?? '';
     recordVisit({
       storeName: CATEGORY_META[selectedCategory].label,
       storeCategory: selectedCategory,
-      recommendedCardId: recommended?.card.id ?? '',
+      recommendedCardId,
       usedCardId: cardId,
       overrideReason,
     });
@@ -87,8 +92,9 @@ export default function RecommendScreen() {
 
   const handleUsedCard = (cardId: string) => {
     if (!selectedCategory) return;
-    const topPickId = aiResult?.cardId ?? scores.find((s) => s.isRecommended)?.card.id;
-    if (topPickId && cardId !== topPickId) {
+    const aiPickIds = [aiResult?.points?.cardId, aiResult?.cashback?.cardId].filter(Boolean) as string[];
+    const topIds = aiPickIds.length > 0 ? aiPickIds : [scores.find((s) => s.isRecommended)?.card.id].filter(Boolean) as string[];
+    if (topIds.length > 0 && !topIds.includes(cardId)) {
       setPendingOverrideCardId(cardId);
     } else {
       finishRecord(cardId);
@@ -102,12 +108,9 @@ export default function RecommendScreen() {
     setAiResult(null);
   };
 
-  // If AI returned a recommendation, put that card first
-  const aiCard = aiResult ? cards.find((c) => c.id === aiResult.cardId) : null;
-  const recommended = aiCard
-    ? scores.find((s) => s.card.id === aiCard.id) ?? scores.find((s) => s.isRecommended)
-    : scores.find((s) => s.isRecommended);
-  const others = scores.filter((s) => s.card.id !== recommended?.card.id);
+  const aiPointsScore = aiResult?.points ? scores.find((s) => s.card.id === aiResult.points!.cardId) : null;
+  const aiCashbackScore = aiResult?.cashback ? scores.find((s) => s.card.id === aiResult.cashback!.cardId) : null;
+  const localTop = scores.find((s) => s.isRecommended);
 
   return (
     <LinearGradient colors={[COLORS.bgGradientStart, COLORS.bgGradientEnd]} style={styles.container}>
@@ -135,7 +138,7 @@ export default function RecommendScreen() {
           <View style={styles.aiPanel}>
             <View style={styles.aiPanelHeader}>
               <FontAwesome name="magic" size={14} color={COLORS.accentLight} />
-              <Text style={styles.aiPanelTitle}>AI Recommendation</Text>
+              <Text style={styles.aiPanelTitle}>AI Recommendations</Text>
               {aiLoading && <ActivityIndicator size="small" color={COLORS.accentLight} style={{ marginLeft: 8 }} />}
             </View>
             {aiLoading && !aiResult && (
@@ -143,7 +146,20 @@ export default function RecommendScreen() {
             )}
             {aiResult && (
               <>
-                <Text style={styles.aiReason}>{aiResult.reason}</Text>
+                {aiResult.points && (
+                  <View style={styles.aiPick}>
+                    <Text style={styles.aiPickLabel}>⭐ Best Points / Miles</Text>
+                    <Text style={styles.aiPickName}>{aiResult.points.cardName}</Text>
+                    <Text style={styles.aiPickReason}>{aiResult.points.reason}</Text>
+                  </View>
+                )}
+                {aiResult.cashback && (
+                  <View style={[styles.aiPick, aiResult.points && styles.aiPickBorderTop]}>
+                    <Text style={styles.aiPickLabel}>💵 Best Cash Back</Text>
+                    <Text style={styles.aiPickName}>{aiResult.cashback.cardName}</Text>
+                    <Text style={styles.aiPickReason}>{aiResult.cashback.reason}</Text>
+                  </View>
+                )}
                 <View style={styles.adviceBorder} />
                 <Text style={styles.adviceLabel}>What you should do</Text>
                 <Text style={styles.adviceText}>{aiResult.advice}</Text>
@@ -154,43 +170,79 @@ export default function RecommendScreen() {
             )}
           </View>
 
-          {/* Recommended Card */}
-          {recommended && (
+          {/* Points pick */}
+          {(aiPointsScore ?? (!aiResult && localTop && localTop.rewardType !== 'cashback' ? localTop : null)) && (() => {
+            const pick = aiPointsScore ?? localTop!;
+            return (
+              <View style={styles.recommendedSection}>
+                <View style={styles.recLabel}>
+                  <Text style={styles.recStar}>⭐</Text>
+                  <Text style={styles.recText}>Best Points / Miles Card</Text>
+                </View>
+                {pick.card.isHSAFSA && (
+                  <View style={styles.hsaBanner}>
+                    <Text style={styles.hsaBannerIcon}>🏥</Text>
+                    <View>
+                      <Text style={styles.hsaBannerTitle}>HSA / FSA Card</Text>
+                      <Text style={styles.hsaBannerSub}>Pay pre-tax — saves 20–37% on medical expenses</Text>
+                    </View>
+                  </View>
+                )}
+                <CreditCardView card={pick.card} />
+                <GlassContainer style={styles.recDetails}>
+                  <Text style={styles.recRate}>{pick.card.isHSAFSA ? 'Pre-tax' : getRewardDisplay(pick.rewardRate, pick.rewardType)}</Text>
+                  <Text style={styles.recRateLabel}>at {selectedCategory ? CATEGORY_META[selectedCategory].label : ''}</Text>
+                  {pick.habitBoost && <Text style={styles.habitNote}>★ Matches your spending habits</Text>}
+                </GlassContainer>
+              </View>
+            );
+          })()}
+
+          {/* Cash back pick */}
+          {(aiCashbackScore ?? (!aiResult && localTop && localTop.rewardType === 'cashback' ? localTop : null)) && (() => {
+            const pick = aiCashbackScore ?? localTop!;
+            return (
+              <View style={styles.recommendedSection}>
+                <View style={styles.recLabel}>
+                  <Text style={styles.recStar}>💵</Text>
+                  <Text style={styles.recText}>Best Cash Back Card</Text>
+                </View>
+                {pick.card.isHSAFSA && (
+                  <View style={styles.hsaBanner}>
+                    <Text style={styles.hsaBannerIcon}>🏥</Text>
+                    <View>
+                      <Text style={styles.hsaBannerTitle}>HSA / FSA Card</Text>
+                      <Text style={styles.hsaBannerSub}>Pay pre-tax — saves 20–37% on medical expenses</Text>
+                    </View>
+                  </View>
+                )}
+                <CreditCardView card={pick.card} />
+                <GlassContainer style={styles.recDetails}>
+                  <Text style={styles.recRate}>{pick.card.isHSAFSA ? 'Pre-tax' : getRewardDisplay(pick.rewardRate, pick.rewardType)}</Text>
+                  <Text style={styles.recRateLabel}>at {selectedCategory ? CATEGORY_META[selectedCategory].label : ''}</Text>
+                  {pick.habitBoost && <Text style={styles.habitNote}>★ Matches your spending habits</Text>}
+                </GlassContainer>
+              </View>
+            );
+          })()}
+
+          {/* Fallback: local top when AI not loaded yet */}
+          {!aiResult && !aiLoading && localTop && (
             <View style={styles.recommendedSection}>
               <View style={styles.recLabel}>
                 <Text style={styles.recStar}>⭐</Text>
-                <Text style={styles.recText}>Use This Card</Text>
+                <Text style={styles.recText}>Top Pick</Text>
               </View>
-              {recommended.card.isHSAFSA && (
-                <View style={styles.hsaBanner}>
-                  <Text style={styles.hsaBannerIcon}>🏥</Text>
-                  <View>
-                    <Text style={styles.hsaBannerTitle}>HSA / FSA Card</Text>
-                    <Text style={styles.hsaBannerSub}>Pay pre-tax — saves 20–37% on medical expenses</Text>
-                  </View>
-                </View>
-              )}
-              <CreditCardView card={recommended.card} />
+              <CreditCardView card={localTop.card} />
               <GlassContainer style={styles.recDetails}>
-                {recommended.card.isHSAFSA ? (
-                  <Text style={styles.recRate}>Pre-tax</Text>
-                ) : (
-                  <Text style={styles.recRate}>
-                    {getRewardDisplay(recommended.rewardRate, recommended.rewardType)}
-                  </Text>
-                )}
-                <Text style={styles.recRateLabel}>
-                  at {selectedCategory ? CATEGORY_META[selectedCategory].label : ''}
-                </Text>
-                {recommended.habitBoost && (
-                  <Text style={styles.habitNote}>★ Matches your spending habits</Text>
-                )}
+                <Text style={styles.recRate}>{localTop.card.isHSAFSA ? 'Pre-tax' : getRewardDisplay(localTop.rewardRate, localTop.rewardType)}</Text>
+                <Text style={styles.recRateLabel}>at {selectedCategory ? CATEGORY_META[selectedCategory].label : ''}</Text>
               </GlassContainer>
             </View>
           )}
 
           {/* Comparison */}
-          {others.length > 0 && (
+          {scores.length > 1 && (
             <GlassContainer style={styles.compSection}>
               <Text style={styles.compTitle}>All Cards Compared</Text>
               <RewardBar scores={scores} />
@@ -204,7 +256,7 @@ export default function RecommendScreen() {
             <View style={styles.usedCards}>
               {scores.map((s) => {
                 const colors = CARD_COLOR_SCHEMES[s.card.colorScheme] ?? CARD_COLOR_SCHEMES.sapphire;
-                const isAiPick = aiResult?.cardId === s.card.id;
+                const isAiPick = s.card.id === aiResult?.points?.cardId || s.card.id === aiResult?.cashback?.cardId;
                 return (
                   <TouchableOpacity
                     key={s.card.id}
@@ -357,6 +409,33 @@ const styles = StyleSheet.create({
     color: COLORS.textMuted,
     fontSize: 13,
     fontStyle: 'italic',
+  },
+  aiPick: {
+    gap: 3,
+    paddingVertical: 6,
+  },
+  aiPickBorderTop: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.surfaceBorder,
+    marginTop: 4,
+    paddingTop: 10,
+  },
+  aiPickLabel: {
+    color: COLORS.textMuted,
+    fontSize: 11,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  aiPickName: {
+    color: COLORS.accentLight,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  aiPickReason: {
+    color: COLORS.textPrimary,
+    fontSize: 13,
+    lineHeight: 18,
   },
   aiReason: {
     color: COLORS.textPrimary,
