@@ -55,7 +55,6 @@ export interface CreditCard {
   createdAt: number;
   hasQuarterlyRotatingRewards?: boolean;
   requiresPrimeMembership?: boolean;
-  hotelRewardRate?: number;
   benefits?: CardBenefit[];
   rewardsBalance?: RewardsBalance;
   pinnedRates?: boolean;
@@ -81,7 +80,6 @@ export interface CardScore {
   isRecommended: boolean;
   habitBoost: boolean;
   baseUsed: boolean;
-  hotelSpecialist: boolean;
 }
 
 export interface HabitEntry {

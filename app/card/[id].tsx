@@ -308,21 +308,6 @@ export default function CardDetailScreen() {
           </View>
         </GlassContainer>
 
-        {/* Hotel Reward */}
-        {card.hotelRewardRate ? (
-          <GlassContainer style={styles.section}>
-            <Text style={styles.sectionTitle}>🏨 Hotel Reward Priority</Text>
-            <View style={styles.rewardRow}>
-              <Text style={styles.rewardEmoji}>🏨</Text>
-              <Text style={styles.rewardCat}>Hotel Reward Rate</Text>
-              <Text style={[styles.rewardRate, styles.rewardRateHigh]}>
-                {getRewardDisplay(card.hotelRewardRate, 'points')}
-              </Text>
-            </View>
-            <Text style={styles.rewardCap}>Used as secondary priority when two cards tie on a category</Text>
-          </GlassContainer>
-        ) : null}
-
         {/* Rewards Balance */}
         <GlassContainer style={styles.section}>
           <View style={styles.balanceHeader}>

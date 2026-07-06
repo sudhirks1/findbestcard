@@ -9,7 +9,6 @@ export interface CardTemplate {
   baseReward: number;
   baseRewardType: RewardType;
   rewards: Omit<CategoryReward, 'maxSpendPeriod'>[];
-  hotelRewardRate?: number;
   benefits?: CardBenefit[];
   notes: string;
   keywords: string[];
@@ -49,7 +48,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'travel', rewardRate: 5, rewardType: 'points' },
       { category: 'hotels', rewardRate: 5, rewardType: 'points' },
     ],
-    hotelRewardRate: 5,
     benefits: [
       { label: '$200 Hotel Credit', value: 200, period: 'annual', notes: 'Amex Fine Hotels & Resorts or Hotel Collection' },
       { label: '$200 Airline Fee Credit', value: 200, period: 'annual', notes: 'One selected airline per year' },
@@ -108,7 +106,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'groceries', rewardRate: 5, rewardType: 'points' },
       { category: 'gas', rewardRate: 5, rewardType: 'points' },
     ],
-    hotelRewardRate: 7,
     notes: '7x Hilton properties, 5x dining/groceries/gas, 3x everywhere else',
     keywords: ['hilton honors amex', 'hilton amex', 'hilton honors card'],
   },
@@ -126,7 +123,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'groceries', rewardRate: 6, rewardType: 'points' },
       { category: 'gas', rewardRate: 6, rewardType: 'points' },
     ],
-    hotelRewardRate: 12,
     benefits: [
       { label: 'Free Weekend Night Certificate', value: 150, period: 'annual', notes: 'Valid at most Hilton properties' },
     ],
@@ -149,7 +145,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'travel', rewardRate: 5, rewardType: 'points' },
       { category: 'hotels', rewardRate: 5, rewardType: 'points' },
     ],
-    hotelRewardRate: 5,
     benefits: [
       { label: '$50 Annual Hotel Credit', value: 50, period: 'annual', notes: 'Via Chase Travel portal' },
     ],
@@ -169,7 +164,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'travel', rewardRate: 10, rewardType: 'points' },
       { category: 'hotels', rewardRate: 10, rewardType: 'points' },
     ],
-    hotelRewardRate: 10,
     benefits: [
       { label: '$300 Annual Travel Credit', value: 300, period: 'annual', notes: 'Auto-applies to travel purchases' },
       { label: 'DoorDash DashPass Credit', value: 5, period: 'monthly', notes: '$5/mo DoorDash credit' },
@@ -222,7 +216,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'travel', rewardRate: 10, rewardType: 'miles' },
       { category: 'hotels', rewardRate: 10, rewardType: 'miles' },
     ],
-    hotelRewardRate: 10,
     benefits: [
       { label: '$300 Annual Travel Credit', value: 300, period: 'annual', notes: 'Capital One Travel bookings' },
       { label: '10,000 Anniversary Miles (~$100)', value: 100, period: 'annual', notes: 'Credited each card anniversary' },
@@ -243,7 +236,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'hotels', rewardRate: 5, rewardType: 'miles' },
       { category: 'travel', rewardRate: 5, rewardType: 'miles' },
     ],
-    hotelRewardRate: 5,
     notes: '5x on hotels & rental cars via Capital One Travel, 2x everywhere',
     keywords: ['capital one venture', 'venture card'],
   },
@@ -286,7 +278,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'travel', rewardRate: 3, rewardType: 'points' },
       { category: 'hotels', rewardRate: 10, rewardType: 'points' },
     ],
-    hotelRewardRate: 10,
     notes: '10x hotels, 3x dining/groceries/gas/travel, 1x everywhere',
     keywords: ['citi strata premier', 'strata premier', 'citi premier'],
   },
@@ -546,7 +537,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'groceries', rewardRate: 3, rewardType: 'points' },
       { category: 'gas', rewardRate: 3, rewardType: 'points' },
     ],
-    hotelRewardRate: 17,
     benefits: [
       { label: 'Free Night Certificate (up to 35K pts)', value: 150, period: 'annual', notes: 'Redeemable at Marriott Bonvoy properties' },
     ],
@@ -567,7 +557,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'travel', rewardRate: 2, rewardType: 'points' },
       { category: 'other', rewardRate: 2, rewardType: 'points' },
     ],
-    hotelRewardRate: 9,
     benefits: [
       { label: 'Free Night Certificate (Category 1-4)', value: 150, period: 'annual', notes: 'Valid at Hyatt Category 1-4 properties' },
     ],
@@ -588,7 +577,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'gas', rewardRate: 5, rewardType: 'points' },
       { category: 'groceries', rewardRate: 5, rewardType: 'points' },
     ],
-    hotelRewardRate: 26,
     benefits: [
       { label: 'Free Night Certificate (annually)', value: 100, period: 'annual', notes: 'Valid at IHG properties worldwide' },
     ],
@@ -608,7 +596,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'gas', rewardRate: 5, rewardType: 'points' },
       { category: 'dining', rewardRate: 4, rewardType: 'points' },
     ],
-    hotelRewardRate: 6,
     notes: '6x Wyndham hotels, 5x gas, 4x dining & groceries',
     keywords: ['wyndham rewards', 'wyndham earner', 'wyndham card'],
   },

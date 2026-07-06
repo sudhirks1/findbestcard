@@ -108,7 +108,6 @@ export default function AddCardScreen() {
   const [baseReward, setBaseReward] = useState(String(editingCard?.baseReward ?? 1));
   const [baseRewardType, setBaseRewardType] = useState<RewardType>(editingCard?.baseRewardType ?? 'cashback');
   const [categoryRewards, setCategoryRewards] = useState<CategoryReward[]>(editingCard?.rewards ?? []);
-  const [hotelRewardRate, setHotelRewardRate] = useState(String(editingCard?.hotelRewardRate ?? ''));
   const [notes, setNotes] = useState(editingCard?.notes ?? '');
 
   // Add category reward form
@@ -182,7 +181,6 @@ const openEditBenefit = (idx: number) => {
       Alert.alert('Invalid base reward rate');
       return;
     }
-    const hotelRate = hotelRewardRate ? parseFloat(hotelRewardRate) : undefined;
     const payload = {
       nickname: nickname.trim(),
       bank: bank.trim(),
@@ -196,7 +194,6 @@ const openEditBenefit = (idx: number) => {
       notes: notes.trim(),
       hasQuarterlyRotatingRewards: hasQuarterlyRotating,
       requiresPrimeMembership: requiresPrime,
-      hotelRewardRate: hotelRate && !isNaN(hotelRate) ? hotelRate : undefined,
       benefits: benefits.length > 0 ? benefits : undefined,
       templateId: selectedTemplateId,
     };
@@ -569,17 +566,6 @@ const openEditBenefit = (idx: number) => {
               </View>
             )}
 
-            <Field label="Hotel Reward Rate (optional — for tiebreaking)">
-              <TextInput
-                style={styles.input}
-                value={hotelRewardRate}
-                onChangeText={setHotelRewardRate}
-                keyboardType="decimal-pad"
-                placeholder="e.g. 10 for 10x hotel points"
-                placeholderTextColor={COLORS.textMuted}
-              />
-            </Field>
-
             <Field label="AI Strategy Note (optional)">
               <TextInput
                 style={[styles.input, styles.notesInput]}
@@ -756,7 +742,6 @@ const openEditBenefit = (idx: number) => {
                   value={`${r.rewardRate}${r.rewardType === 'cashback' ? '%' : 'x'} ${r.rewardType}`}
                 />
               ))}
-              {hotelRewardRate ? <ConfirmRow label="🏨 Hotel Reward" value={`${hotelRewardRate}x (secondary priority)`} /> : null}
               {benefits.map((b, i) => {
                 const annual = b.period === 'monthly' ? b.value * 12 : b.value;
                 return (

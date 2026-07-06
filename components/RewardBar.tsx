@@ -36,7 +36,6 @@ export default function RewardBar({ scores }: Props) {
               {getRewardDisplay(score.rewardRate, score.rewardType)}
             </Text>
             {score.habitBoost && <Text style={styles.habitBadge}>★</Text>}
-            {score.hotelSpecialist && <Text style={styles.hotelBadge}>🏨</Text>}
           </View>
         );
       })}
@@ -93,9 +92,6 @@ const styles = StyleSheet.create({
   },
   habitBadge: {
     color: COLORS.gold,
-    fontSize: 12,
-  },
-  hotelBadge: {
     fontSize: 12,
   },
 });

@@ -78,7 +78,6 @@ export function serverCardToLocal(s: any): CreditCard {
     createdAt: s.createdAt ? new Date(s.createdAt).getTime() : Date.now(),
     hasQuarterlyRotatingRewards: s.hasQuarterlyRotatingRewards || false,
     requiresPrimeMembership: s.requiresPrimeMembership || false,
-    hotelRewardRate: s.hotelsRate ? Number(s.hotelsRate) : undefined,
     benefits: s.benefits as CardBenefit[] | undefined,
     rewardsBalance:
       s.rewardsBalance != null

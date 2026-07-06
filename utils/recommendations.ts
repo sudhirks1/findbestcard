@@ -61,13 +61,6 @@ export function rankCards(
     // Habit weight: up to 0.3 bonus per habit point (capped at 3 points = 0.9 bonus)
     const habitWeight = habitEntry ? Math.min(habitEntry.count * 0.3, 0.9) : 0;
 
-    // Hotel reward rate only breaks ties when the user is actually shopping for hotels.
-    // For all other categories it must not influence ranking — the hotel rate is irrelevant.
-    const hotelBoost =
-      category === 'hotels' && card.hotelRewardRate
-        ? normalizeRate(card.hotelRewardRate, 'points') * 0.05
-        : 0;
-
     return {
       card,
       rewardRate: rate,
@@ -75,8 +68,7 @@ export function rankCards(
       isRecommended: false,
       habitBoost,
       baseUsed,
-      hotelSpecialist: !!(card.hotelRewardRate),
-      _score: normalized + habitWeight + hotelBoost,
+      _score: normalized + habitWeight,
     } as CardScore & { _score: number };
   });
 
@@ -89,14 +81,13 @@ export function rankCards(
   }
 
   // Strip internal _score
-  return scores.map(({ card, rewardRate, rewardType, isRecommended, habitBoost, baseUsed, hotelSpecialist }) => ({
+  return scores.map(({ card, rewardRate, rewardType, isRecommended, habitBoost, baseUsed }) => ({
     card,
     rewardRate,
     rewardType,
     isRecommended,
     habitBoost,
     baseUsed,
-    hotelSpecialist,
   }));
 }
 
