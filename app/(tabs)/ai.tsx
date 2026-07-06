@@ -37,6 +37,20 @@ export default function AIAdvisorScreen() {
 
   const scrollRef = useRef<ScrollView>(null);
 
+  // Scroll to end only when new messages arrive, not while typing
+  useEffect(() => {
+    if (openThread.length > 0) {
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    }
+  }, [openThread.length]);
+
+  useEffect(() => {
+    const hasNewMessage = Object.values(threads).some((t) => t.length > 0);
+    if (hasNewMessage) {
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    }
+  }, [JSON.stringify(Object.values(threads).map((t) => t.length))]);
+
   const loadQuestions = useCallback(async () => {
     if (!token) return;
     try {
@@ -164,7 +178,6 @@ export default function AIAdvisorScreen() {
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
         >
           {/* Open question box */}
           <View style={styles.openBox}>
