@@ -10,8 +10,6 @@ import {
   Alert,
   ScrollView,
   Modal,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -229,7 +227,7 @@ export default function AdminScreen() {
       )}
 
       <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet">
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.modal}>
+        <View style={styles.modal}>
           <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setModalVisible(false)}>
               <Text style={styles.cancelText}>Cancel</Text>
@@ -244,7 +242,11 @@ export default function AdminScreen() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView contentContainerStyle={styles.modalBody} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            contentContainerStyle={styles.modalBody}
+            keyboardShouldPersistTaps="handled"
+            automaticallyAdjustKeyboardInsets
+          >
             <Text style={styles.sectionLabel}>Card Info</Text>
             <TextInput
               style={styles.field}
@@ -283,7 +285,7 @@ export default function AdminScreen() {
               </View>
             ))}
           </ScrollView>
-        </KeyboardAvoidingView>
+        </View>
       </Modal>
     </LinearGradient>
   );
@@ -373,7 +375,7 @@ const styles = StyleSheet.create({
   modalTitle: { color: COLORS.textPrimary, fontSize: 17, fontWeight: '700' },
   cancelText: { color: COLORS.textSecondary, fontSize: 16 },
   saveText: { color: COLORS.accentLight, fontSize: 16, fontWeight: '700' },
-  modalBody: { padding: 20, gap: 12 },
+  modalBody: { padding: 20, gap: 12, paddingBottom: 60 },
   sectionLabel: {
     color: COLORS.textMuted,
     fontSize: 12,
