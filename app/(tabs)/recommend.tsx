@@ -48,7 +48,7 @@ export default function RecommendScreen() {
       return;
     }
     setSelectedCategory(cat);
-    const ranked = rankCards(cat, cards, habits);
+    const ranked = rankCards(cat, cards.filter((c) => !c.pausedFromRecommendations), habits);
     setScores(ranked);
     setStep('result');
 
@@ -112,6 +112,17 @@ export default function RecommendScreen() {
   const aiCashbackScore = aiResult?.cashback ? scores.find((s) => s.card.id === aiResult.cashback!.cardId) : null;
   const localTop = scores.find((s) => s.isRecommended);
 
+  // Determine user's preferred reward type from habit history
+  const pointsUsageCount = habits.filter((h) => {
+    const card = cards.find((c) => c.id === h.cardId);
+    return card && (card.baseRewardType === 'points' || card.baseRewardType === 'miles');
+  }).reduce((sum, h) => sum + h.count, 0);
+  const cashbackUsageCount = habits.filter((h) => {
+    const card = cards.find((c) => c.id === h.cardId);
+    return card && card.baseRewardType === 'cashback';
+  }).reduce((sum, h) => sum + h.count, 0);
+  const prefersPoints = pointsUsageCount >= cashbackUsageCount;
+
   return (
     <LinearGradient colors={[COLORS.bgGradientStart, COLORS.bgGradientEnd]} style={styles.container}>
       <StatusBar barStyle="light-content" />
@@ -146,20 +157,31 @@ export default function RecommendScreen() {
             )}
             {aiResult && (
               <>
-                {aiResult.points && (
-                  <View style={styles.aiPick}>
-                    <Text style={styles.aiPickLabel}>⭐ Best Points / Miles</Text>
-                    <Text style={styles.aiPickName}>{aiResult.points.cardName}</Text>
-                    <Text style={styles.aiPickReason}>{aiResult.points.reason}</Text>
-                  </View>
-                )}
-                {aiResult.cashback && (
-                  <View style={[styles.aiPick, aiResult.points && styles.aiPickBorderTop]}>
-                    <Text style={styles.aiPickLabel}>💵 Best Cash Back</Text>
-                    <Text style={styles.aiPickName}>{aiResult.cashback.cardName}</Text>
-                    <Text style={styles.aiPickReason}>{aiResult.cashback.reason}</Text>
-                  </View>
-                )}
+                {(() => {
+                  const hasBoth = !!(aiResult.points && aiResult.cashback);
+                  const first = prefersPoints ? aiResult.points : aiResult.cashback;
+                  const second = prefersPoints ? aiResult.cashback : aiResult.points;
+                  const firstLabel = prefersPoints ? '⭐ Best Points / Miles' : '💵 Best Cash Back';
+                  const secondLabel = prefersPoints ? '💵 Best Cash Back' : '⭐ Best Points / Miles';
+                  return (
+                    <>
+                      {first && (
+                        <View style={styles.aiPick}>
+                          <Text style={styles.aiPickLabel}>{firstLabel}</Text>
+                          <Text style={styles.aiPickName}>{first.cardName}</Text>
+                          <Text style={styles.aiPickReason}>{first.reason}</Text>
+                        </View>
+                      )}
+                      {second && (
+                        <View style={[styles.aiPick, hasBoth && styles.aiPickBorderTop]}>
+                          <Text style={styles.aiPickLabel}>{secondLabel}</Text>
+                          <Text style={styles.aiPickName}>{second.cardName}</Text>
+                          <Text style={styles.aiPickReason}>{second.reason}</Text>
+                        </View>
+                      )}
+                    </>
+                  );
+                })()}
                 <View style={styles.adviceBorder} />
                 <Text style={styles.adviceLabel}>What you should do</Text>
                 <Text style={styles.adviceText}>{aiResult.advice}</Text>
@@ -170,42 +192,45 @@ export default function RecommendScreen() {
             )}
           </View>
 
-          {/* Points pick */}
-          {(aiPointsScore ?? (!aiResult && localTop && localTop.rewardType !== 'cashback' ? localTop : null)) && (() => {
-            const pick = aiPointsScore ?? localTop!;
-            return (
-              <View style={styles.recommendedSection}>
+          {/* Points & Cashback picks — preferred type shown first */}
+          {(() => {
+            const pointsPick = aiPointsScore ?? (!aiResult && localTop && localTop.rewardType !== 'cashback' ? localTop : null);
+            const cashbackPick = aiCashbackScore ?? (!aiResult && localTop && localTop.rewardType === 'cashback' ? localTop : null);
+            const catLabel = selectedCategory ? CATEGORY_META[selectedCategory].label : '';
+
+            const pointsBlock = pointsPick ? (
+              <View key="points" style={styles.recommendedSection}>
                 <View style={styles.recLabel}>
                   <Text style={styles.recStar}>⭐</Text>
                   <Text style={styles.recText}>Best Points / Miles Card</Text>
                 </View>
-                <CreditCardView card={pick.card} />
+                <CreditCardView card={pointsPick.card} />
                 <GlassContainer style={styles.recDetails}>
-                  <Text style={styles.recRate}>{getRewardDisplay(pick.rewardRate, pick.rewardType)}</Text>
-                  <Text style={styles.recRateLabel}>at {selectedCategory ? CATEGORY_META[selectedCategory].label : ''}</Text>
-                  {pick.habitBoost && <Text style={styles.habitNote}>★ Matches your spending habits</Text>}
+                  <Text style={styles.recRate}>{getRewardDisplay(pointsPick.rewardRate, pointsPick.rewardType)}</Text>
+                  <Text style={styles.recRateLabel}>at {catLabel}</Text>
+                  {pointsPick.habitBoost && <Text style={styles.habitNote}>★ Matches your spending habits</Text>}
                 </GlassContainer>
               </View>
-            );
-          })()}
+            ) : null;
 
-          {/* Cash back pick */}
-          {(aiCashbackScore ?? (!aiResult && localTop && localTop.rewardType === 'cashback' ? localTop : null)) && (() => {
-            const pick = aiCashbackScore ?? localTop!;
-            return (
-              <View style={styles.recommendedSection}>
+            const cashbackBlock = cashbackPick ? (
+              <View key="cashback" style={styles.recommendedSection}>
                 <View style={styles.recLabel}>
                   <Text style={styles.recStar}>💵</Text>
                   <Text style={styles.recText}>Best Cash Back Card</Text>
                 </View>
-                <CreditCardView card={pick.card} />
+                <CreditCardView card={cashbackPick.card} />
                 <GlassContainer style={styles.recDetails}>
-                  <Text style={styles.recRate}>{getRewardDisplay(pick.rewardRate, pick.rewardType)}</Text>
-                  <Text style={styles.recRateLabel}>at {selectedCategory ? CATEGORY_META[selectedCategory].label : ''}</Text>
-                  {pick.habitBoost && <Text style={styles.habitNote}>★ Matches your spending habits</Text>}
+                  <Text style={styles.recRate}>{getRewardDisplay(cashbackPick.rewardRate, cashbackPick.rewardType)}</Text>
+                  <Text style={styles.recRateLabel}>at {catLabel}</Text>
+                  {cashbackPick.habitBoost && <Text style={styles.habitNote}>★ Matches your spending habits</Text>}
                 </GlassContainer>
               </View>
-            );
+            ) : null;
+
+            return prefersPoints
+              ? <>{pointsBlock}{cashbackBlock}</>
+              : <>{cashbackBlock}{pointsBlock}</>;
           })()}
 
           {/* Fallback: local top when AI not loaded yet */}

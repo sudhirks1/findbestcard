@@ -50,6 +50,7 @@ export interface CreditCard {
   requiresPrimeMembership?: boolean;
   rewardsBalance?: RewardsBalance;
   pinnedRates?: boolean;
+  pausedFromRecommendations?: boolean;
   templateId?: string;         // links to master catalog — enables update tracking
   templateUpdatedAt?: string | null;  // set by server when admin updates the template
 }

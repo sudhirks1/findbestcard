@@ -173,6 +173,13 @@ export default function CardDetailScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        {/* Paused banner */}
+        {card.pausedFromRecommendations && (
+          <View style={styles.pausedBanner}>
+            <Text style={styles.pausedBannerText}>⏸ This card is paused — not included in any recommendations</Text>
+          </View>
+        )}
+
         {/* Card Visual */}
         <View style={styles.cardWrapper}>
           <CreditCardView card={card} />
@@ -286,6 +293,26 @@ export default function CardDetailScreen() {
               );
             })
           )}
+        </GlassContainer>
+
+        {/* Pause from recommendations */}
+        <GlassContainer style={styles.section}>
+          <View style={styles.pinnedRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.sectionTitle}>Pause from Recommendations</Text>
+              <Text style={styles.pinnedSub}>
+                {card.pausedFromRecommendations
+                  ? 'This card is hidden from all recommendations. Toggle off to re-enable.'
+                  : 'This card is active in recommendations. Pause if you\'ve hit a limit or want to take a break.'}
+              </Text>
+            </View>
+            <Switch
+              value={!!card.pausedFromRecommendations}
+              onValueChange={(v) => updateCard(card.id, { pausedFromRecommendations: v })}
+              trackColor={{ false: COLORS.surfaceBorder, true: COLORS.red }}
+              thumbColor={card.pausedFromRecommendations ? '#FF6B6B' : '#888'}
+            />
+          </View>
         </GlassContainer>
 
         {/* Admin Rates Lock */}
@@ -499,6 +526,15 @@ const styles = StyleSheet.create({
   deleteBtnText: { color: COLORS.red, fontSize: 13, fontWeight: '600' },
   scroll: { paddingHorizontal: 24, paddingBottom: 60, gap: 16 },
   cardWrapper: { alignItems: 'center' },
+  pausedBanner: {
+    backgroundColor: 'rgba(255,107,107,0.12)',
+    borderWidth: 1,
+    borderColor: '#FF6B6B',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  pausedBannerText: { color: '#FF6B6B', fontSize: 13, fontWeight: '600', textAlign: 'center' },
   updateBanner: {
     backgroundColor: '#F59E0B',
     borderRadius: 14,

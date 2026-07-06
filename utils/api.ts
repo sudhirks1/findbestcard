@@ -78,6 +78,7 @@ export function serverCardToLocal(s: any): CreditCard {
     createdAt: s.createdAt ? new Date(s.createdAt).getTime() : Date.now(),
     hasQuarterlyRotatingRewards: s.hasQuarterlyRotatingRewards || false,
     requiresPrimeMembership: s.requiresPrimeMembership || false,
+    pausedFromRecommendations: s.pausedFromRecommendations || false,
     rewardsBalance:
       s.rewardsBalance != null
         ? { amount: Number(s.rewardsBalance), updatedAt: Number(s.rewardsBalanceUpdatedAt) }
@@ -111,6 +112,7 @@ export function localCardToServer(card: CreditCard, sortOrder = 0): object {
     rewardsBalanceUpdatedAt: card.rewardsBalance?.updatedAt ?? null,
     sortOrder,
     pinnedRates: card.pinnedRates ?? false,
+    pausedFromRecommendations: card.pausedFromRecommendations ?? false,
     templateId: card.templateId ?? null,
     ...rateFields,
   };

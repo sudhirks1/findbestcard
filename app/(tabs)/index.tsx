@@ -58,6 +58,11 @@ function AnimatedCard({
       <TouchableOpacity onPress={onPress} onLongPress={onLongPress} activeOpacity={0.92}>
         <View>
           <CreditCardView card={card} />
+          {card.pausedFromRecommendations && (
+            <View style={{ position: 'absolute', top: 10, left: 10, backgroundColor: 'rgba(0,0,0,0.65)', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>
+              <Text style={{ color: '#FF6B6B', fontSize: 10, fontWeight: '800' }}>⏸ Paused</Text>
+            </View>
+          )}
           {card.templateUpdatedAt && (
             <View style={{ position: 'absolute', top: 10, right: 10, backgroundColor: '#F59E0B', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3 }}>
               <Text style={{ color: '#000', fontSize: 10, fontWeight: '800' }}>Update available</Text>
@@ -141,15 +146,15 @@ export default function WalletScreen() {
               {/* Subscriptions section */}
               <View style={styles.subSection}>
                 <View style={styles.subHeader}>
-                  <Text style={styles.subTitle}>Subscriptions</Text>
+                  <Text style={styles.subTitle}>Subscriptions & Auto Payments</Text>
                   <TouchableOpacity onPress={() => router.push('/add-subscription' as any)} style={styles.subAddBtn}>
                     <Text style={styles.subAddText}>+ Add</Text>
                   </TouchableOpacity>
                 </View>
                 {subscriptions.length === 0 ? (
                   <TouchableOpacity style={styles.subEmpty} onPress={() => router.push('/add-subscription' as any)} activeOpacity={0.75}>
-                    <Text style={styles.subEmptyText}>Track Netflix, Spotify, Amazon Prime and more — see which cards earn the most on your recurring bills.</Text>
-                    <Text style={styles.subEmptyLink}>+ Add subscription</Text>
+                    <Text style={styles.subEmptyText}>Track Netflix, Spotify, Amazon Prime, utilities and more — see which cards earn the most on your recurring bills and auto payments.</Text>
+                    <Text style={styles.subEmptyLink}>+ Add subscription or payment</Text>
                   </TouchableOpacity>
                 ) : (
                   <>
