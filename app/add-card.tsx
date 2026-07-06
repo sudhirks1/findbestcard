@@ -18,7 +18,7 @@ import { useCardStore } from '../store/useCardStore';
 import { useAuthStore } from '../store/useAuthStore';
 import * as api from '../utils/api';
 import { COLORS, CATEGORY_META, CARD_COLOR_SCHEMES, ALL_CATEGORIES } from '../utils/constants';
-import { StoreCategory, CardNetwork, RewardType, CategoryReward, CardBenefit } from '../types';
+import { StoreCategory, CardNetwork, RewardType, CategoryReward } from '../types';
 
 const NETWORKS: { key: CardNetwork; label: string }[] = [
   { key: 'visa', label: 'Visa' },
@@ -35,12 +35,7 @@ const REWARD_TYPES: { key: RewardType; label: string }[] = [
 
 const COLOR_KEYS = Object.keys(CARD_COLOR_SCHEMES);
 
-type Step = 'basic' | 'rewards' | 'benefits' | 'confirm';
-
-const BENEFIT_PERIODS: { key: CardBenefit['period']; label: string }[] = [
-  { key: 'annual', label: 'Annual' },
-  { key: 'monthly', label: 'Monthly' },
-];
+type Step = 'basic' | 'rewards' | 'confirm';
 
 export default function AddCardScreen() {
   const router = useRouter();
@@ -51,7 +46,7 @@ export default function AddCardScreen() {
   const editingCard = cardId ? cards.find((c) => c.id === cardId) : undefined;
   const isEditing = !!editingCard;
 
-  const validSteps: Step[] = ['basic', 'rewards', 'benefits', 'confirm'];
+  const validSteps: Step[] = ['basic', 'rewards', 'confirm'];
   const [step, setStep] = useState<Step>(
     isEditing && validSteps.includes(startStep as Step) ? (startStep as Step) : 'basic'
   );
@@ -95,15 +90,6 @@ export default function AddCardScreen() {
   const [hasQuarterlyRotating, setHasQuarterlyRotating] = useState(editingCard?.hasQuarterlyRotatingRewards ?? false);
   const [requiresPrime, setRequiresPrime] = useState(editingCard?.requiresPrimeMembership ?? false);
 
-  // Benefits
-  const [benefits, setBenefits] = useState<CardBenefit[]>(editingCard?.benefits ?? []);
-  const [addingBenefit, setAddingBenefit] = useState(false);
-  const [editingBenefitIdx, setEditingBenefitIdx] = useState<number | null>(null);
-  const [benefitLabel, setBenefitLabel] = useState('');
-  const [benefitValue, setBenefitValue] = useState('');
-  const [benefitPeriod, setBenefitPeriod] = useState<CardBenefit['period']>('annual');
-  const [benefitNotes, setBenefitNotes] = useState('');
-
   // Rewards
   const [baseReward, setBaseReward] = useState(String(editingCard?.baseReward ?? 1));
   const [baseRewardType, setBaseRewardType] = useState<RewardType>(editingCard?.baseRewardType ?? 'cashback');
@@ -132,37 +118,6 @@ export default function AddCardScreen() {
 
   const handleRemoveCategoryReward = (cat: StoreCategory) => {
     setCategoryRewards((prev) => prev.filter((r) => r.category !== cat));
-  };
-
-const openEditBenefit = (idx: number) => {
-    const b = benefits[idx];
-    setBenefitLabel(b.label);
-    setBenefitValue(String(b.value));
-    setBenefitPeriod(b.period);
-    setBenefitNotes(b.notes ?? '');
-    setEditingBenefitIdx(idx);
-    setAddingBenefit(true);
-  };
-
-  const handleAddBenefit = () => {
-    if (!benefitLabel.trim()) return;
-    const val = parseFloat(benefitValue);
-    if (isNaN(val) || val <= 0) {
-      Alert.alert('Invalid value', 'Enter a positive dollar amount.');
-      return;
-    }
-    const entry: CardBenefit = { label: benefitLabel.trim(), value: val, period: benefitPeriod, notes: benefitNotes.trim() || undefined };
-    if (editingBenefitIdx !== null) {
-      setBenefits((prev) => prev.map((b, i) => (i === editingBenefitIdx ? entry : b)));
-    } else {
-      setBenefits((prev) => [...prev, entry]);
-    }
-    setBenefitLabel('');
-    setBenefitValue('');
-    setBenefitPeriod('annual');
-    setBenefitNotes('');
-    setAddingBenefit(false);
-    setEditingBenefitIdx(null);
   };
 
   const validateBasic = () => {
@@ -194,7 +149,6 @@ const openEditBenefit = (idx: number) => {
       notes: notes.trim(),
       hasQuarterlyRotatingRewards: hasQuarterlyRotating,
       requiresPrimeMembership: requiresPrime,
-      benefits: benefits.length > 0 ? benefits : undefined,
       templateId: selectedTemplateId,
     };
     if (isEditing && editingCard) {
@@ -205,7 +159,7 @@ const openEditBenefit = (idx: number) => {
     router.back();
   };
 
-  const progressPct = step === 'basic' ? 25 : step === 'rewards' ? 50 : step === 'benefits' ? 75 : 100;
+  const progressPct = step === 'basic' ? 33 : step === 'rewards' ? 66 : 100;
 
   return (
     <LinearGradient colors={[COLORS.bgGradientStart, COLORS.bgGradientEnd]} style={styles.container}>
@@ -218,8 +172,8 @@ const openEditBenefit = (idx: number) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
           {isEditing
-            ? (step === 'basic' ? 'Edit Card' : step === 'rewards' ? 'Edit Rewards' : step === 'benefits' ? 'Edit Benefits' : 'Confirm Changes')
-            : (step === 'basic' ? 'Card Details' : step === 'rewards' ? 'Rewards Setup' : step === 'benefits' ? 'Card Benefits' : 'Confirm')}
+            ? (step === 'basic' ? 'Edit Card' : step === 'rewards' ? 'Edit Rewards' : 'Confirm Changes')
+            : (step === 'basic' ? 'Card Details' : step === 'rewards' ? 'Rewards Setup' : 'Confirm')}
         </Text>
         <View style={{ width: 36 }} />
       </View>
@@ -279,7 +233,6 @@ const openEditBenefit = (idx: number) => {
                   setBaseReward(String(t.baseReward));
                   setBaseRewardType(t.baseRewardType as RewardType);
                   setCategoryRewards(t.rewards as CategoryReward[]);
-                  if (t.benefits) setBenefits(t.benefits as CardBenefit[]);
                   setSelectedTemplateId(t.templateId);
                   setHasQuarterlyRotating(t.hasQuarterlyRotatingRewards ?? false);
                   setRequiresPrime(t.requiresPrimeMembership ?? false);
@@ -315,7 +268,6 @@ const openEditBenefit = (idx: number) => {
                   setBaseReward(String(t.baseReward));
                   setBaseRewardType(t.baseRewardType as RewardType);
                   setCategoryRewards(t.rewards as CategoryReward[]);
-                  if (t.benefits?.length) setBenefits(t.benefits as CardBenefit[]);
                   setSelectedTemplateId(t.templateId);
                   setHasQuarterlyRotating(t.hasQuarterlyRotatingRewards ?? false);
                   setRequiresPrime(t.requiresPrimeMembership ?? false);
@@ -581,132 +533,8 @@ const openEditBenefit = (idx: number) => {
               <TouchableOpacity style={styles.prevBtn} onPress={() => setStep('basic')} activeOpacity={0.8}>
                 <Text style={styles.prevBtnText}>← Back</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.nextBtn2} onPress={() => setStep('benefits')} activeOpacity={0.85}>
-                <Text style={styles.nextBtnText}>Benefits →</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-
-        {step === 'benefits' && (
-          <View style={styles.stepContent}>
-            <Text style={styles.stepNote}>
-              Add credits and perks that offset the annual fee — like travel credits, Uber Cash, or free night certificates. The app will calculate your card's net effective cost.
-            </Text>
-
-            {/* Existing benefits list */}
-            {benefits.length > 0 && (
-              <View style={styles.rewardsList}>
-                {benefits.map((b, idx) => {
-                  const annual = b.period === 'monthly' ? b.value * 12 : b.value;
-                  return (
-                    <View key={idx} style={styles.rewardRow}>
-                      <Text style={styles.rewardEmoji}>✓</Text>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.rewardCat}>{b.label}</Text>
-                        <Text style={[styles.rewardRate, { fontSize: 12 }]}>
-                          {b.period === 'monthly'
-                            ? `$${b.value}/mo = $${annual}/yr`
-                            : `$${annual}/yr`}
-                        </Text>
-                      </View>
-                      <TouchableOpacity onPress={() => openEditBenefit(idx)} style={{ paddingHorizontal: 6 }}>
-                        <Text style={styles.editBenefitIcon}>✎</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => setBenefits((prev) => prev.filter((_, i) => i !== idx))}>
-                        <Text style={styles.removeBtn}>✕</Text>
-                      </TouchableOpacity>
-                    </View>
-                  );
-                })}
-                {/* Total */}
-                {(() => {
-                  const totalCredits = benefits.reduce(
-                    (s, b) => s + (b.period === 'monthly' ? b.value * 12 : b.value), 0
-                  );
-                  const fee = parseFloat(annualFee) || 0;
-                  const net = fee - totalCredits;
-                  return (
-                    <View style={styles.benefitTotalRow}>
-                      <Text style={styles.benefitTotalLabel}>
-                        Annual fee ${fee} − ${totalCredits} credits
-                      </Text>
-                      <Text style={[styles.benefitTotalValue, net <= 0 && styles.benefitTotalGreen]}>
-                        {net <= 0 ? `Earns $${Math.abs(net)}/yr` : `Net $${net}/yr`}
-                      </Text>
-                    </View>
-                  );
-                })()}
-              </View>
-            )}
-
-            {addingBenefit ? (
-              <View style={styles.editCatForm}>
-                <Text style={styles.editCatTitle}>{editingBenefitIdx !== null ? 'Edit Benefit' : 'New Benefit'}</Text>
-                <TextInput
-                  style={styles.input}
-                  value={benefitLabel}
-                  onChangeText={setBenefitLabel}
-                  placeholder="e.g. Uber Cash, Travel Credit, Free Night"
-                  placeholderTextColor={COLORS.textMuted}
-                  autoFocus
-                />
-                <View style={styles.rateRow}>
-                  <TextInput
-                    style={[styles.input, { flex: 1 }]}
-                    value={benefitValue}
-                    onChangeText={setBenefitValue}
-                    keyboardType="decimal-pad"
-                    placeholder="$ value"
-                    placeholderTextColor={COLORS.textMuted}
-                  />
-                  <View style={styles.chips}>
-                    {BENEFIT_PERIODS.map((p) => (
-                      <TouchableOpacity
-                        key={p.key}
-                        style={[styles.chip, benefitPeriod === p.key && styles.chipActive]}
-                        onPress={() => setBenefitPeriod(p.key)}
-                        activeOpacity={0.8}
-                      >
-                        <Text style={[styles.chipText, benefitPeriod === p.key && styles.chipTextActive]}>
-                          {p.label}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-                <TextInput
-                  style={styles.input}
-                  value={benefitNotes}
-                  onChangeText={setBenefitNotes}
-                  placeholder="Notes (optional)"
-                  placeholderTextColor={COLORS.textMuted}
-                />
-                <View style={styles.editCatBtns}>
-                  <TouchableOpacity style={styles.editCatSave} onPress={handleAddBenefit} activeOpacity={0.8}>
-                    <Text style={styles.editCatSaveText}>Add</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => { setAddingBenefit(false); setEditingBenefitIdx(null); }}>
-                    <Text style={styles.editCatCancel}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-              <TouchableOpacity
-                style={styles.addBenefitBtn}
-                onPress={() => setAddingBenefit(true)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.addBenefitBtnText}>+ Add Benefit</Text>
-              </TouchableOpacity>
-            )}
-
-            <View style={styles.navRow}>
-              <TouchableOpacity style={styles.prevBtn} onPress={() => setStep('rewards')} activeOpacity={0.8}>
-                <Text style={styles.prevBtnText}>← Back</Text>
-              </TouchableOpacity>
               <TouchableOpacity style={styles.nextBtn2} onPress={() => setStep('confirm')} activeOpacity={0.85}>
-                <Text style={styles.nextBtnText}>{benefits.length > 0 ? 'Review →' : 'Skip →'}</Text>
+                <Text style={styles.nextBtnText}>Review →</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -742,21 +570,11 @@ const openEditBenefit = (idx: number) => {
                   value={`${r.rewardRate}${r.rewardType === 'cashback' ? '%' : 'x'} ${r.rewardType}`}
                 />
               ))}
-              {benefits.map((b, i) => {
-                const annual = b.period === 'monthly' ? b.value * 12 : b.value;
-                return (
-                  <ConfirmRow
-                    key={i}
-                    label={`✓ ${b.label}`}
-                    value={b.period === 'monthly' ? `$${b.value}/mo ($${annual}/yr)` : `$${annual}/yr`}
-                  />
-                );
-              })}
               {notes ? <ConfirmRow label="Notes" value={notes} /> : null}
             </View>
 
             <View style={styles.navRow}>
-              <TouchableOpacity style={styles.prevBtn} onPress={() => setStep('benefits')} activeOpacity={0.8}>
+              <TouchableOpacity style={styles.prevBtn} onPress={() => setStep('rewards')} activeOpacity={0.8}>
                 <Text style={styles.prevBtnText}>← Edit</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.85}>
@@ -896,7 +714,6 @@ const styles = StyleSheet.create({
   rewardEmoji: { fontSize: 18 },
   rewardCat: { flex: 1, color: COLORS.textPrimary, fontSize: 14, fontWeight: '600' },
   rewardRate: { color: COLORS.green, fontSize: 14, fontWeight: '700' },
-  editBenefitIcon: { color: COLORS.accentLight, fontSize: 15, fontWeight: '600' },
   removeBtn: { color: COLORS.red, fontSize: 16, fontWeight: '600' },
   editCatForm: {
     backgroundColor: COLORS.surface,
@@ -1041,28 +858,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F59E0B',
     borderColor: '#F59E0B',
   },
-  addBenefitBtn: {
-    borderWidth: 1,
-    borderColor: COLORS.surfaceBorder,
-    borderStyle: 'dashed',
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  addBenefitBtnText: { color: COLORS.textSecondary, fontSize: 13, fontWeight: '600' },
-  benefitTotalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.surfaceBorder,
-    marginTop: 4,
-  },
-  benefitTotalLabel: { color: COLORS.textSecondary, fontSize: 12 },
-  benefitTotalValue: { color: COLORS.textPrimary, fontSize: 14, fontWeight: '700' },
-  benefitTotalGreen: { color: COLORS.green },
   autoFillBanner: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,4 +1,4 @@
-import { CardBenefit, CategoryReward, RewardType } from '../types';
+import { CategoryReward, RewardType } from '../types';
 
 export interface CardTemplate {
   name: string;
@@ -9,7 +9,6 @@ export interface CardTemplate {
   baseReward: number;
   baseRewardType: RewardType;
   rewards: Omit<CategoryReward, 'maxSpendPeriod'>[];
-  benefits?: CardBenefit[];
   notes: string;
   keywords: string[];
 }
@@ -28,11 +27,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'groceries', rewardRate: 4, rewardType: 'points', maxSpend: 25000 },
       { category: 'travel', rewardRate: 3, rewardType: 'points' },
     ],
-    benefits: [
-      { label: 'Monthly Dining Credit', value: 10, period: 'monthly', notes: 'Grubhub, Cheesecake Factory, Goldbelly, etc.' },
-      { label: 'Monthly Uber Cash', value: 10, period: 'monthly', notes: 'For Uber rides and Uber Eats' },
-      { label: 'Resy Restaurant Credit', value: 100, period: 'annual', notes: '$50 in Jan–Jun, $50 in Jul–Dec' },
-    ],
     notes: '4x dining & US groceries (up to $25K/yr), 3x flights',
     keywords: ['amex gold', 'american express gold'],
   },
@@ -47,14 +41,6 @@ export const CARD_DATABASE: CardTemplate[] = [
     rewards: [
       { category: 'travel', rewardRate: 5, rewardType: 'points' },
       { category: 'hotels', rewardRate: 5, rewardType: 'points' },
-    ],
-    benefits: [
-      { label: '$200 Hotel Credit', value: 200, period: 'annual', notes: 'Amex Fine Hotels & Resorts or Hotel Collection' },
-      { label: '$200 Airline Fee Credit', value: 200, period: 'annual', notes: 'One selected airline per year' },
-      { label: 'Digital Entertainment Credit', value: 20, period: 'monthly', notes: 'Disney+, Hulu, ESPN+, Peacock, etc.' },
-      { label: 'Uber Cash', value: 200, period: 'annual', notes: '$15/mo + $35 in Dec for rides and Eats' },
-      { label: '$155 Walmart+ Credit', value: 155, period: 'annual', notes: 'Covers Walmart+ monthly membership' },
-      { label: '$100 Saks Fifth Avenue Credit', value: 100, period: 'annual', notes: '$50 in Jan–Jun, $50 in Jul–Dec' },
     ],
     notes: '5x on flights & Amex Travel, $200 hotel credit, lounge access',
     keywords: ['amex platinum', 'american express platinum'],
@@ -123,9 +109,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'groceries', rewardRate: 6, rewardType: 'points' },
       { category: 'gas', rewardRate: 6, rewardType: 'points' },
     ],
-    benefits: [
-      { label: 'Free Weekend Night Certificate', value: 150, period: 'annual', notes: 'Valid at most Hilton properties' },
-    ],
     notes: '12x Hilton, 6x dining/groceries/gas, free weekend night annually',
     keywords: ['hilton surpass', 'hilton honors surpass'],
   },
@@ -145,9 +128,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'travel', rewardRate: 5, rewardType: 'points' },
       { category: 'hotels', rewardRate: 5, rewardType: 'points' },
     ],
-    benefits: [
-      { label: '$50 Annual Hotel Credit', value: 50, period: 'annual', notes: 'Via Chase Travel portal' },
-    ],
     notes: '5x on Chase Travel, 3x dining/streaming/groceries',
     keywords: ['chase sapphire preferred', 'sapphire preferred'],
   },
@@ -163,11 +143,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'dining', rewardRate: 3, rewardType: 'points' },
       { category: 'travel', rewardRate: 10, rewardType: 'points' },
       { category: 'hotels', rewardRate: 10, rewardType: 'points' },
-    ],
-    benefits: [
-      { label: '$300 Annual Travel Credit', value: 300, period: 'annual', notes: 'Auto-applies to travel purchases' },
-      { label: 'DoorDash DashPass Credit', value: 5, period: 'monthly', notes: '$5/mo DoorDash credit' },
-      { label: 'Global Entry / TSA PreCheck Credit', value: 100, period: 'annual', notes: '$100 every 4.5 years — $22/yr effective' },
     ],
     notes: '10x on hotels & car rentals via Chase Travel, 3x dining & travel',
     keywords: ['chase sapphire reserve', 'sapphire reserve', 'csr'],
@@ -215,11 +190,6 @@ export const CARD_DATABASE: CardTemplate[] = [
     rewards: [
       { category: 'travel', rewardRate: 10, rewardType: 'miles' },
       { category: 'hotels', rewardRate: 10, rewardType: 'miles' },
-    ],
-    benefits: [
-      { label: '$300 Annual Travel Credit', value: 300, period: 'annual', notes: 'Capital One Travel bookings' },
-      { label: '10,000 Anniversary Miles (~$100)', value: 100, period: 'annual', notes: 'Credited each card anniversary' },
-      { label: 'Global Entry / TSA PreCheck Credit', value: 100, period: 'annual', notes: '$100 every 4 years' },
     ],
     notes: '10x on hotels & rentals via Capital One Travel, 2x everywhere',
     keywords: ['venture x', 'capital one venture x'],
@@ -537,9 +507,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'groceries', rewardRate: 3, rewardType: 'points' },
       { category: 'gas', rewardRate: 3, rewardType: 'points' },
     ],
-    benefits: [
-      { label: 'Free Night Certificate (up to 35K pts)', value: 150, period: 'annual', notes: 'Redeemable at Marriott Bonvoy properties' },
-    ],
     notes: '17x at Marriott hotels, 3x dining/groceries/gas, free night annually',
     keywords: ['marriott bonvoy boundless', 'marriott bonvoy', 'marriott chase'],
   },
@@ -557,9 +524,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'travel', rewardRate: 2, rewardType: 'points' },
       { category: 'other', rewardRate: 2, rewardType: 'points' },
     ],
-    benefits: [
-      { label: 'Free Night Certificate (Category 1-4)', value: 150, period: 'annual', notes: 'Valid at Hyatt Category 1-4 properties' },
-    ],
     notes: '9x at Hyatt hotels, 2x dining/travel/fitness, free night annually',
     keywords: ['world of hyatt', 'hyatt credit card', 'hyatt card'],
   },
@@ -576,9 +540,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'dining', rewardRate: 5, rewardType: 'points' },
       { category: 'gas', rewardRate: 5, rewardType: 'points' },
       { category: 'groceries', rewardRate: 5, rewardType: 'points' },
-    ],
-    benefits: [
-      { label: 'Free Night Certificate (annually)', value: 100, period: 'annual', notes: 'Valid at IHG properties worldwide' },
     ],
     notes: '26x at IHG hotels, 5x dining/gas/groceries, free night annually',
     keywords: ['ihg one rewards', 'ihg premier', 'ihg card', 'intercontinental'],
@@ -612,9 +573,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'dining', rewardRate: 2, rewardType: 'miles' },
       { category: 'groceries', rewardRate: 2, rewardType: 'miles' },
     ],
-    benefits: [
-      { label: 'First Checked Bag Free (you + companion)', value: 70, period: 'annual', notes: '$35 savings each way — assumes ~1 round trip/yr' },
-    ],
     notes: '3x Delta flights, 2x dining & groceries, free checked bag',
     keywords: ['delta skymiles gold', 'delta gold amex', 'delta amex gold'],
   },
@@ -630,9 +588,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'travel', rewardRate: 2, rewardType: 'miles' },
       { category: 'hotels', rewardRate: 2, rewardType: 'miles' },
       { category: 'dining', rewardRate: 2, rewardType: 'miles' },
-    ],
-    benefits: [
-      { label: 'First Checked Bag Free (you + companion)', value: 70, period: 'annual', notes: '$35 savings each way — assumes ~1 round trip/yr' },
     ],
     notes: '2x United flights, hotels & dining, free checked bag',
     keywords: ['united explorer', 'united mileageplus explorer', 'united chase'],
@@ -650,9 +605,6 @@ export const CARD_DATABASE: CardTemplate[] = [
       { category: 'hotels', rewardRate: 2, rewardType: 'points' },
       { category: 'dining', rewardRate: 2, rewardType: 'points' },
       { category: 'streaming', rewardRate: 2, rewardType: 'points' },
-    ],
-    benefits: [
-      { label: '3,000 Anniversary Bonus Points (~$42)', value: 42, period: 'annual', notes: 'Points credited at card anniversary' },
     ],
     notes: '2x Southwest purchases, hotels & car rentals, dining & streaming',
     keywords: ['southwest rapid rewards', 'southwest plus', 'southwest card'],

@@ -369,70 +369,6 @@ export default function CardDetailScreen() {
           )}
         </GlassContainer>
 
-        {/* Benefits */}
-        {card.benefits && card.benefits.length > 0 ? (
-          <GlassContainer style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Card Benefits & Credits</Text>
-              <TouchableOpacity
-                onPress={() => router.push({ pathname: '/add-card', params: { cardId: card.id, startStep: 'benefits' } })}
-                style={styles.editBenefitsBtn}
-              >
-                <Text style={styles.editBenefitsBtnText}>Edit</Text>
-              </TouchableOpacity>
-            </View>
-            {card.benefits.map((b, i) => {
-              const annual = b.period === 'monthly' ? b.value * 12 : b.value;
-              return (
-                <View key={i} style={styles.benefitRow}>
-                  <View style={styles.benefitDot} />
-                  <View style={styles.benefitMid}>
-                    <Text style={styles.benefitLabel}>{b.label}</Text>
-                    {b.notes ? <Text style={styles.benefitNotes}>{b.notes}</Text> : null}
-                  </View>
-                  <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={styles.benefitValue}>
-                      {b.period === 'monthly' ? `$${b.value}/mo` : `$${annual}/yr`}
-                    </Text>
-                    {b.period === 'monthly' && (
-                      <Text style={styles.benefitValueAnnual}>${annual}/yr</Text>
-                    )}
-                  </View>
-                </View>
-              );
-            })}
-            {(() => {
-              const totalCredits = card.benefits!.reduce(
-                (s, b) => s + (b.period === 'monthly' ? b.value * 12 : b.value), 0
-              );
-              const net = card.annualFee - totalCredits;
-              return (
-                <View style={styles.netCostRow}>
-                  <Text style={styles.netCostLabel}>
-                    ${card.annualFee} fee − ${totalCredits} credits
-                  </Text>
-                  <Text style={[styles.netCostValue, net <= 0 && styles.netCostGreen]}>
-                    {net <= 0 ? `Earns $${Math.abs(net)}/yr` : `Net $${net}/yr`}
-                  </Text>
-                </View>
-              );
-            })()}
-          </GlassContainer>
-        ) : (
-          <TouchableOpacity
-            style={styles.addBenefitsPrompt}
-            onPress={() => router.push({ pathname: '/add-card', params: { cardId: card.id, startStep: 'benefits' } })}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.addBenefitsIcon}>✦</Text>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.addBenefitsTitle}>Add Card Benefits & Credits</Text>
-              <Text style={styles.addBenefitsSub}>Track Uber Cash, travel credits, free nights and more to see your card's true net cost</Text>
-            </View>
-            <Text style={styles.addBenefitsChevron}>→</Text>
-          </TouchableOpacity>
-        )}
-
         {/* Notes */}
         {card.notes && (
           <GlassContainer style={styles.section}>
@@ -640,61 +576,6 @@ const styles = StyleSheet.create({
   },
   balanceAmountUnit: { color: COLORS.textSecondary, fontSize: 15, fontWeight: '500' },
   balanceEmpty: { color: COLORS.textMuted, fontSize: 13, lineHeight: 19, marginTop: 6 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  editBenefitsBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: COLORS.accentLight + '55',
-  },
-  editBenefitsBtnText: { color: COLORS.accentLight, fontSize: 12, fontWeight: '600' },
-  benefitRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  benefitDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-    backgroundColor: COLORS.green,
-    marginTop: 5,
-  },
-  benefitMid: { flex: 1 },
-  benefitLabel: { color: COLORS.textPrimary, fontSize: 14, fontWeight: '600' },
-  benefitNotes: { color: COLORS.textMuted, fontSize: 11, marginTop: 1 },
-  benefitValue: { color: COLORS.green, fontSize: 13, fontWeight: '700' },
-  benefitValueAnnual: { color: COLORS.textMuted, fontSize: 10, marginTop: 1 },
-  netCostRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 10,
-    marginTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.surfaceBorder,
-  },
-  netCostLabel: { color: COLORS.textSecondary, fontSize: 12 },
-  netCostValue: { color: COLORS.textPrimary, fontSize: 14, fontWeight: '800' },
-  netCostGreen: { color: COLORS.green },
-  addBenefitsPrompt: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: 'rgba(52,211,153,0.07)',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: COLORS.accentLight + '33',
-  },
-  addBenefitsIcon: { fontSize: 22, color: COLORS.accentLight },
-  addBenefitsTitle: { color: COLORS.accentLight, fontSize: 14, fontWeight: '700' },
-  addBenefitsSub: { color: COLORS.textMuted, fontSize: 11, marginTop: 2, lineHeight: 16 },
-  addBenefitsChevron: { color: COLORS.accentLight, fontSize: 16, fontWeight: '700' },
   notes: { color: COLORS.textSecondary, fontSize: 14, lineHeight: 21 },
   habitRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
   habitEmoji: { fontSize: 18, width: 26 },

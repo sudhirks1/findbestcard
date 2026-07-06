@@ -1,4 +1,4 @@
-import { CreditCard, StoreCategory, RewardType, CardBenefit } from '../types';
+import { CreditCard, StoreCategory, RewardType } from '../types';
 
 const BASE_URL = 'https://findbestcard-api-production.up.railway.app';
 
@@ -78,7 +78,6 @@ export function serverCardToLocal(s: any): CreditCard {
     createdAt: s.createdAt ? new Date(s.createdAt).getTime() : Date.now(),
     hasQuarterlyRotatingRewards: s.hasQuarterlyRotatingRewards || false,
     requiresPrimeMembership: s.requiresPrimeMembership || false,
-    benefits: s.benefits as CardBenefit[] | undefined,
     rewardsBalance:
       s.rewardsBalance != null
         ? { amount: Number(s.rewardsBalance), updatedAt: Number(s.rewardsBalanceUpdatedAt) }
@@ -108,7 +107,6 @@ export function localCardToServer(card: CreditCard, sortOrder = 0): object {
     notes: card.notes,
     hasQuarterlyRotatingRewards: card.hasQuarterlyRotatingRewards || false,
     requiresPrimeMembership: card.requiresPrimeMembership || false,
-    benefits: card.benefits || [],
     rewardsBalance: card.rewardsBalance?.amount ?? null,
     rewardsBalanceUpdatedAt: card.rewardsBalance?.updatedAt ?? null,
     sortOrder,
@@ -272,7 +270,6 @@ export function serverTemplateToAutofill(t: any) {
     baseReward: Number(t.baseRewardRate || 1),
     baseRewardType: t.rewardType || 'cashback',
     rewards,
-    benefits: t.benefits || [],
     hasQuarterlyRotatingRewards: t.hasQuarterlyRotatingRewards || false,
     requiresPrimeMembership: t.requiresPrimeMembership || false,
   };

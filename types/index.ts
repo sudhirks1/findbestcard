@@ -5,13 +5,6 @@ export interface RewardsBalance {
   updatedAt: number;
 }
 
-export interface CardBenefit {
-  label: string;
-  value: number;
-  period: 'monthly' | 'annual';
-  notes?: string;
-}
-
 export type StoreCategory =
   | 'dining'
   | 'groceries'
@@ -55,7 +48,6 @@ export interface CreditCard {
   createdAt: number;
   hasQuarterlyRotatingRewards?: boolean;
   requiresPrimeMembership?: boolean;
-  benefits?: CardBenefit[];
   rewardsBalance?: RewardsBalance;
   pinnedRates?: boolean;
   templateId?: string;         // links to master catalog — enables update tracking

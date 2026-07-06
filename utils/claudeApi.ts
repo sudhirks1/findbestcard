@@ -54,34 +54,10 @@ export function buildWalletSystemPrompt(cards: CreditCard[], habits: HabitEntry[
       }),
     ];
 
-    const benefits = card.benefits ?? [];
-    const benefitLines = benefits.map((b) => {
-      const annual = b.period === 'monthly' ? b.value * 12 : b.value;
-      const periodStr = b.period === 'monthly' ? `$${b.value}/mo = $${annual}/yr` : `$${annual}/yr`;
-      return `  ✓ ${b.label}: ${periodStr}`;
-    });
-
-    const totalCredits = benefits.reduce(
-      (sum, b) => sum + (b.period === 'monthly' ? b.value * 12 : b.value),
-      0
-    );
-    const netCost = card.annualFee - totalCredits;
-    const netStr =
-      totalCredits > 0
-        ? netCost > 0
-          ? `  → Net effective cost: $${netCost}/yr`
-          : netCost === 0
-          ? `  → Net effective cost: $0 (break-even)`
-          : `  → Net effective cost: earns $${Math.abs(netCost)}/yr in credits`
-        : '';
-
     return [
       `${i + 1}. ${card.nickname} (${card.bank}, ${card.network.toUpperCase()})`,
       `  Annual fee: ${feeStr}`,
       ...rewardLines,
-      ...(benefitLines.length > 0 ? ['  Annual credits/benefits:'] : []),
-      ...benefitLines,
-      netStr,
       card.notes ? `  Notes: ${card.notes}` : '',
     ]
       .filter(Boolean)
@@ -89,9 +65,6 @@ export function buildWalletSystemPrompt(cards: CreditCard[], habits: HabitEntry[
   });
 
   const totalFees = cards.reduce((s, c) => s + c.annualFee, 0);
-  const totalCredits = cards.reduce((s, c) => {
-    return s + (c.benefits ?? []).reduce((bs, b) => bs + (b.period === 'monthly' ? b.value * 12 : b.value), 0);
-  }, 0);
 
   const habitLines =
     habits.length > 0
@@ -110,7 +83,7 @@ export function buildWalletSystemPrompt(cards: CreditCard[], habits: HabitEntry[
 CURRENT WALLET (${cards.length} card${cards.length !== 1 ? 's' : ''}):
 ${cardDescriptions.join('\n\n')}
 
-TOTAL ANNUAL FEES: $${totalFees}${totalCredits > 0 ? ` | TOTAL CREDITS: $${totalCredits} | NET COST: $${totalFees - totalCredits}` : ''}
+TOTAL ANNUAL FEES: $${totalFees}
 
 SPENDING HABITS (from app tracking):
 ${habitLines.join('\n')}`;
