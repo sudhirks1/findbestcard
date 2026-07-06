@@ -402,46 +402,50 @@ const openEditBenefit = (idx: number) => {
                 placeholderTextColor={COLORS.textMuted}
               />
             </Field>
-            <Field label="Quarterly Rotating Rewards">
-              <TouchableOpacity
-                style={[styles.toggleRow, hasQuarterlyRotating && styles.flagToggleActive]}
-                onPress={() => setHasQuarterlyRotating((v) => !v)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.toggleEmoji}>🔄</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, hasQuarterlyRotating && styles.flagToggleLabelActive]}>
-                    Has quarterly rotating categories
-                  </Text>
-                  <Text style={styles.toggleSub}>
-                    e.g. Discover it — 5% categories change each quarter
-                  </Text>
-                </View>
-                <View style={[styles.toggleCheckbox, hasQuarterlyRotating && styles.flagCheckboxActive]}>
-                  {hasQuarterlyRotating && <Text style={styles.toggleCheckmark}>✓</Text>}
-                </View>
-              </TouchableOpacity>
-            </Field>
-            <Field label="Amazon Prime Required">
-              <TouchableOpacity
-                style={[styles.toggleRow, requiresPrime && styles.primeToggleActive]}
-                onPress={() => setRequiresPrime((v) => !v)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.toggleEmoji}>📦</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.toggleLabel, requiresPrime && styles.primeToggleLabelActive]}>
-                    Best rates require Prime membership
-                  </Text>
-                  <Text style={styles.toggleSub}>
-                    e.g. Amazon Prime Visa — 5% only with active Prime
-                  </Text>
-                </View>
-                <View style={[styles.toggleCheckbox, requiresPrime && styles.primeCheckboxActive]}>
-                  {requiresPrime && <Text style={styles.toggleCheckmark}>✓</Text>}
-                </View>
-              </TouchableOpacity>
-            </Field>
+            {(nickname.toLowerCase().includes('discover') || bank.toLowerCase().includes('discover')) && (
+              <Field label="Quarterly Rotating Rewards">
+                <TouchableOpacity
+                  style={[styles.toggleRow, hasQuarterlyRotating && styles.flagToggleActive]}
+                  onPress={() => setHasQuarterlyRotating((v) => !v)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.toggleEmoji}>🔄</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.toggleLabel, hasQuarterlyRotating && styles.flagToggleLabelActive]}>
+                      Has quarterly rotating categories
+                    </Text>
+                    <Text style={styles.toggleSub}>
+                      5% cashback categories change each quarter
+                    </Text>
+                  </View>
+                  <View style={[styles.toggleCheckbox, hasQuarterlyRotating && styles.flagCheckboxActive]}>
+                    {hasQuarterlyRotating && <Text style={styles.toggleCheckmark}>✓</Text>}
+                  </View>
+                </TouchableOpacity>
+              </Field>
+            )}
+            {(nickname.toLowerCase().includes('amazon') || bank.toLowerCase().includes('amazon')) && (
+              <Field label="Amazon Prime Required">
+                <TouchableOpacity
+                  style={[styles.toggleRow, requiresPrime && styles.primeToggleActive]}
+                  onPress={() => setRequiresPrime((v) => !v)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.toggleEmoji}>📦</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.toggleLabel, requiresPrime && styles.primeToggleLabelActive]}>
+                      Best rates require Prime membership
+                    </Text>
+                    <Text style={styles.toggleSub}>
+                      5% back only with an active Prime subscription
+                    </Text>
+                  </View>
+                  <View style={[styles.toggleCheckbox, requiresPrime && styles.primeCheckboxActive]}>
+                    {requiresPrime && <Text style={styles.toggleCheckmark}>✓</Text>}
+                  </View>
+                </TouchableOpacity>
+              </Field>
+            )}
             <TouchableOpacity
               style={styles.nextBtn}
               onPress={() => { if (validateBasic()) setStep('rewards'); }}
