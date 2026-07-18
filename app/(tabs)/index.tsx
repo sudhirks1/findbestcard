@@ -158,7 +158,11 @@ export default function WalletScreen() {
                   </TouchableOpacity>
                 ) : (
                   <>
-                    {subscriptions.map((sub) => {
+                    {[...subscriptions].sort((a, b) => {
+                      const aYr = a.period === 'monthly' ? a.amount * 12 : a.amount;
+                      const bYr = b.period === 'monthly' ? b.amount * 12 : b.amount;
+                      return bYr - aYr;
+                    }).map((sub) => {
                       const monthly = sub.period === 'annual' ? sub.amount / 12 : sub.amount;
                       const annual = sub.period === 'monthly' ? sub.amount * 12 : sub.amount;
                       const payingCard = cards.find((c) => c.id === sub.cardId);
