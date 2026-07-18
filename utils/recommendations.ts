@@ -48,46 +48,28 @@ export function rankCards(
 ): CardScore[] {
   if (!cards.length) return [];
 
-  const scores = cards.map((card): CardScore => {
+  const scored = cards.map((card) => {
     const { rate, type, baseUsed } = getCardRateForCategory(card, category);
     const normalized = normalizeRate(rate, type);
-
-    // Habit boost: if the user has picked this card for this category before,
-    // add a small weight so ties break toward their preference.
-    const habitEntry = habits.find(
-      (h) => h.category === category && h.cardId === card.id
-    );
+    const habitEntry = habits.find((h) => h.category === category && h.cardId === card.id);
     const habitBoost = !!habitEntry && habitEntry.count > 0;
-    // Habit weight: up to 0.3 bonus per habit point (capped at 3 points = 0.9 bonus)
-    const habitWeight = habitEntry ? Math.min(habitEntry.count * 0.3, 0.9) : 0;
-
-    return {
-      card,
-      rewardRate: rate,
-      rewardType: type,
-      isRecommended: false,
-      habitBoost,
-      baseUsed,
-      _score: normalized + habitWeight,
-    } as CardScore & { _score: number };
+    const habitCount = habitEntry?.count ?? 0;
+    return { card, rewardRate: rate, rewardType: type, isRecommended: false, habitBoost, baseUsed, normalized, habitCount };
   });
 
-  // Sort descending by score
-  scores.sort((a, b) => ((b as any)._score ?? 0) - ((a as any)._score ?? 0));
+  // Primary sort: normalized rate (rate always wins).
+  // Tiebreaker: when rates are equal, the card used more often for this
+  // category wins (prior usage as the deciding factor).
+  scored.sort((a, b) => {
+    const rateDiff = b.normalized - a.normalized;
+    if (Math.abs(rateDiff) > 0.001) return rateDiff;
+    return b.habitCount - a.habitCount;
+  });
 
-  // Mark the top card as recommended
-  if (scores.length > 0) {
-    scores[0].isRecommended = true;
-  }
+  if (scored.length > 0) scored[0].isRecommended = true;
 
-  // Strip internal _score
-  return scores.map(({ card, rewardRate, rewardType, isRecommended, habitBoost, baseUsed }) => ({
-    card,
-    rewardRate,
-    rewardType,
-    isRecommended,
-    habitBoost,
-    baseUsed,
+  return scored.map(({ card, rewardRate, rewardType, isRecommended, habitBoost, baseUsed }) => ({
+    card, rewardRate, rewardType, isRecommended, habitBoost, baseUsed,
   }));
 }
 
