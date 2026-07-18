@@ -7,21 +7,17 @@ import {
   TouchableOpacity,
   Alert,
   StatusBar,
-  ActivityIndicator,
   Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useCardStore } from '../../store/useCardStore';
 import { useHabitStore } from '../../store/useHabitStore';
-import { useAuthStore } from '../../store/useAuthStore';
 import CategorySelector from '../../components/CategorySelector';
 import RewardBar from '../../components/RewardBar';
 import GlassContainer from '../../components/GlassContainer';
 import CreditCardView from '../../components/CreditCardView';
 import { COLORS, CATEGORY_META, CARD_COLOR_SCHEMES } from '../../utils/constants';
 import { rankCards, getRewardDisplay } from '../../utils/recommendations';
-import { aiRecommend } from '../../utils/api';
 import { StoreCategory, CardScore } from '../../types';
 
 type Step = 'category' | 'result';
@@ -29,44 +25,21 @@ type Step = 'category' | 'result';
 export default function RecommendScreen() {
   const { cards } = useCardStore();
   const { habits, recordVisit } = useHabitStore();
-  const token = useAuthStore((s) => s.token);
 
   const [step, setStep] = useState<Step>('category');
   const [selectedCategory, setSelectedCategory] = useState<StoreCategory | null>(null);
   const [scores, setScores] = useState<CardScore[]>([]);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiResult, setAiResult] = useState<{
-    points: { cardId: string; cardName: string; reason: string } | null;
-    cashback: { cardId: string; cardName: string; reason: string } | null;
-    advice: string;
-  } | null>(null);
   const [pendingOverrideCardId, setPendingOverrideCardId] = useState<string | null>(null);
 
-  const handleFind = async (cat: StoreCategory) => {
+  const handleFind = (cat: StoreCategory) => {
     if (cards.length === 0) {
       Alert.alert('No Cards', 'Add credit cards to your wallet first.');
       return;
     }
-    // Issue 2: clear previous results immediately before computing new ones
-    setAiResult(null);
-    setAiLoading(false);
     setSelectedCategory(cat);
     const ranked = rankCards(cat, cards.filter((c) => !c.pausedFromRecommendations), habits);
     setScores(ranked);
     setStep('result');
-
-    // Fetch AI advice text in background (card picks come from local ranking)
-    if (token) {
-      setAiLoading(true);
-      try {
-        const result = await aiRecommend(token, cat);
-        setAiResult(result);
-      } catch {
-        // AI unavailable — local ranking still shown
-      } finally {
-        setAiLoading(false);
-      }
-    }
   };
 
   const OVERRIDE_REASONS = [
@@ -105,15 +78,12 @@ export default function RecommendScreen() {
     setStep('category');
     setSelectedCategory(null);
     setScores([]);
-    setAiResult(null);
   };
 
-  // Issue 1: always use local ranking for which card to display — AI only provides advice text
-  const localTop = scores.find((s) => s.isRecommended);
   const localCashbackTop = scores.find((s) => s.rewardType === 'cashback');
   const localPointsTop = scores.find((s) => s.rewardType !== 'cashback');
 
-  // Determine user's preferred reward type from habit history
+  // Show preferred reward type first based on habit history
   const pointsUsageCount = habits.filter((h) => {
     const card = cards.find((c) => c.id === h.cardId);
     return card && (card.baseRewardType === 'points' || card.baseRewardType === 'miles');
@@ -146,54 +116,7 @@ export default function RecommendScreen() {
             <Text style={styles.catLabel}>{selectedCategory ? CATEGORY_META[selectedCategory].label : ''}</Text>
           </View>
 
-          {/* AI Advice Panel */}
-          <View style={styles.aiPanel}>
-            <View style={styles.aiPanelHeader}>
-              <FontAwesome name="magic" size={14} color={COLORS.accentLight} />
-              <Text style={styles.aiPanelTitle}>AI Recommendations</Text>
-              {aiLoading && <ActivityIndicator size="small" color={COLORS.accentLight} style={{ marginLeft: 8 }} />}
-            </View>
-            {aiLoading && !aiResult && (
-              <Text style={styles.aiLoading}>Analysing your wallet and habits…</Text>
-            )}
-            {aiResult && (
-              <>
-                {(() => {
-                  const hasBoth = !!(aiResult.points && aiResult.cashback);
-                  const first = prefersPoints ? aiResult.points : aiResult.cashback;
-                  const second = prefersPoints ? aiResult.cashback : aiResult.points;
-                  const firstLabel = prefersPoints ? '⭐ Best Points / Miles' : '💵 Best Cash Back';
-                  const secondLabel = prefersPoints ? '💵 Best Cash Back' : '⭐ Best Points / Miles';
-                  return (
-                    <>
-                      {first && (
-                        <View style={styles.aiPick}>
-                          <Text style={styles.aiPickLabel}>{firstLabel}</Text>
-                          <Text style={styles.aiPickName}>{first.cardName}</Text>
-                          <Text style={styles.aiPickReason}>{first.reason}</Text>
-                        </View>
-                      )}
-                      {second && (
-                        <View style={[styles.aiPick, hasBoth && styles.aiPickBorderTop]}>
-                          <Text style={styles.aiPickLabel}>{secondLabel}</Text>
-                          <Text style={styles.aiPickName}>{second.cardName}</Text>
-                          <Text style={styles.aiPickReason}>{second.reason}</Text>
-                        </View>
-                      )}
-                    </>
-                  );
-                })()}
-                <View style={styles.adviceBorder} />
-                <Text style={styles.adviceLabel}>What you should do</Text>
-                <Text style={styles.adviceText}>{aiResult.advice}</Text>
-              </>
-            )}
-            {!aiLoading && !aiResult && (
-              <Text style={styles.aiLoading}>Using local ranking (AI unavailable)</Text>
-            )}
-          </View>
-
-          {/* Points & Cashback picks from local ranking — preferred type shown first */}
+          {/* Points & Cashback picks — preferred type shown first */}
           {(() => {
             const catLabel = selectedCategory ? CATEGORY_META[selectedCategory].label : '';
 
@@ -259,7 +182,7 @@ export default function RecommendScreen() {
                       colors={[colors[0], colors[1]]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
-                      style={[styles.usedCardGrad, isTopPick && styles.usedCardAiPick]}
+                      style={[styles.usedCardGrad, isTopPick && styles.usedCardTopPick]}
                     >
                       <Text style={styles.usedCardName} numberOfLines={1}>
                         {s.card.nickname}
@@ -376,80 +299,6 @@ const styles = StyleSheet.create({
   },
   catEmoji: { fontSize: 18, marginRight: 8 },
   catLabel: { color: COLORS.textPrimary, fontSize: 15, fontWeight: '700' },
-  aiPanel: {
-    backgroundColor: 'rgba(5,150,105,0.08)',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(52,211,153,0.25)',
-    gap: 8,
-  },
-  aiPanelHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  aiPanelTitle: {
-    color: COLORS.accentLight,
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  aiLoading: {
-    color: COLORS.textMuted,
-    fontSize: 13,
-    fontStyle: 'italic',
-  },
-  aiPick: {
-    gap: 3,
-    paddingVertical: 6,
-  },
-  aiPickBorderTop: {
-    borderTopWidth: 1,
-    borderTopColor: COLORS.surfaceBorder,
-    marginTop: 4,
-    paddingTop: 10,
-  },
-  aiPickLabel: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  aiPickName: {
-    color: COLORS.accentLight,
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  aiPickReason: {
-    color: COLORS.textPrimary,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  aiReason: {
-    color: COLORS.textPrimary,
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
-  },
-  adviceBorder: {
-    height: 1,
-    backgroundColor: COLORS.surfaceBorder,
-  },
-  adviceLabel: {
-    color: COLORS.textMuted,
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  adviceText: {
-    color: COLORS.textSecondary,
-    fontSize: 13,
-    lineHeight: 19,
-  },
   recommendedSection: { gap: 12 },
   recLabel: {
     flexDirection: 'row',
@@ -499,7 +348,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
   },
-  usedCardAiPick: {
+  usedCardTopPick: {
     borderWidth: 2,
     borderColor: COLORS.accentLight,
   },
