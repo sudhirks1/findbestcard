@@ -47,15 +47,17 @@ export default function RecommendScreen() {
       Alert.alert('No Cards', 'Add credit cards to your wallet first.');
       return;
     }
+    // Issue 2: clear previous results immediately before computing new ones
+    setAiResult(null);
+    setAiLoading(false);
     setSelectedCategory(cat);
     const ranked = rankCards(cat, cards.filter((c) => !c.pausedFromRecommendations), habits);
     setScores(ranked);
     setStep('result');
 
-    // Fetch AI recommendation in background
+    // Fetch AI advice text in background (card picks come from local ranking)
     if (token) {
       setAiLoading(true);
-      setAiResult(null);
       try {
         const result = await aiRecommend(token, cat);
         setAiResult(result);
@@ -76,8 +78,7 @@ export default function RecommendScreen() {
 
   const finishRecord = (cardId: string, overrideReason?: string) => {
     if (!selectedCategory) return;
-    const aiTopId = aiResult?.points?.cardId ?? aiResult?.cashback?.cardId;
-    const recommendedCardId = aiTopId ?? scores.find((s) => s.isRecommended)?.card.id ?? '';
+    const recommendedCardId = scores.find((s) => s.isRecommended)?.card.id ?? '';
     recordVisit({
       storeName: CATEGORY_META[selectedCategory].label,
       storeCategory: selectedCategory,
@@ -92,8 +93,7 @@ export default function RecommendScreen() {
 
   const handleUsedCard = (cardId: string) => {
     if (!selectedCategory) return;
-    const aiPickIds = [aiResult?.points?.cardId, aiResult?.cashback?.cardId].filter(Boolean) as string[];
-    const topIds = aiPickIds.length > 0 ? aiPickIds : [scores.find((s) => s.isRecommended)?.card.id].filter(Boolean) as string[];
+    const topIds = [localCashbackTop?.card.id, localPointsTop?.card.id].filter(Boolean) as string[];
     if (topIds.length > 0 && !topIds.includes(cardId)) {
       setPendingOverrideCardId(cardId);
     } else {
@@ -108,9 +108,10 @@ export default function RecommendScreen() {
     setAiResult(null);
   };
 
-  const aiPointsScore = aiResult?.points ? scores.find((s) => s.card.id === aiResult.points!.cardId) : null;
-  const aiCashbackScore = aiResult?.cashback ? scores.find((s) => s.card.id === aiResult.cashback!.cardId) : null;
+  // Issue 1: always use local ranking for which card to display — AI only provides advice text
   const localTop = scores.find((s) => s.isRecommended);
+  const localCashbackTop = scores.find((s) => s.rewardType === 'cashback');
+  const localPointsTop = scores.find((s) => s.rewardType !== 'cashback');
 
   // Determine user's preferred reward type from habit history
   const pointsUsageCount = habits.filter((h) => {
@@ -192,38 +193,36 @@ export default function RecommendScreen() {
             )}
           </View>
 
-          {/* Points & Cashback picks — preferred type shown first */}
+          {/* Points & Cashback picks from local ranking — preferred type shown first */}
           {(() => {
-            const pointsPick = aiPointsScore ?? (!aiResult && localTop && localTop.rewardType !== 'cashback' ? localTop : null);
-            const cashbackPick = aiCashbackScore ?? (!aiResult && localTop && localTop.rewardType === 'cashback' ? localTop : null);
             const catLabel = selectedCategory ? CATEGORY_META[selectedCategory].label : '';
 
-            const pointsBlock = pointsPick ? (
+            const pointsBlock = localPointsTop ? (
               <View key="points" style={styles.recommendedSection}>
                 <View style={styles.recLabel}>
                   <Text style={styles.recStar}>⭐</Text>
                   <Text style={styles.recText}>Best Points / Miles Card</Text>
                 </View>
-                <CreditCardView card={pointsPick.card} />
+                <CreditCardView card={localPointsTop.card} />
                 <GlassContainer style={styles.recDetails}>
-                  <Text style={styles.recRate}>{getRewardDisplay(pointsPick.rewardRate, pointsPick.rewardType)}</Text>
+                  <Text style={styles.recRate}>{getRewardDisplay(localPointsTop.rewardRate, localPointsTop.rewardType)}</Text>
                   <Text style={styles.recRateLabel}>at {catLabel}</Text>
-                  {pointsPick.habitBoost && <Text style={styles.habitNote}>★ Matches your spending habits</Text>}
+                  {localPointsTop.habitBoost && <Text style={styles.habitNote}>★ Matches your spending habits</Text>}
                 </GlassContainer>
               </View>
             ) : null;
 
-            const cashbackBlock = cashbackPick ? (
+            const cashbackBlock = localCashbackTop ? (
               <View key="cashback" style={styles.recommendedSection}>
                 <View style={styles.recLabel}>
                   <Text style={styles.recStar}>💵</Text>
                   <Text style={styles.recText}>Best Cash Back Card</Text>
                 </View>
-                <CreditCardView card={cashbackPick.card} />
+                <CreditCardView card={localCashbackTop.card} />
                 <GlassContainer style={styles.recDetails}>
-                  <Text style={styles.recRate}>{getRewardDisplay(cashbackPick.rewardRate, cashbackPick.rewardType)}</Text>
+                  <Text style={styles.recRate}>{getRewardDisplay(localCashbackTop.rewardRate, localCashbackTop.rewardType)}</Text>
                   <Text style={styles.recRateLabel}>at {catLabel}</Text>
-                  {cashbackPick.habitBoost && <Text style={styles.habitNote}>★ Matches your spending habits</Text>}
+                  {localCashbackTop.habitBoost && <Text style={styles.habitNote}>★ Matches your spending habits</Text>}
                 </GlassContainer>
               </View>
             ) : null;
@@ -232,21 +231,6 @@ export default function RecommendScreen() {
               ? <>{pointsBlock}{cashbackBlock}</>
               : <>{cashbackBlock}{pointsBlock}</>;
           })()}
-
-          {/* Fallback: local top when AI not loaded yet */}
-          {!aiResult && !aiLoading && localTop && (
-            <View style={styles.recommendedSection}>
-              <View style={styles.recLabel}>
-                <Text style={styles.recStar}>⭐</Text>
-                <Text style={styles.recText}>Top Pick</Text>
-              </View>
-              <CreditCardView card={localTop.card} />
-              <GlassContainer style={styles.recDetails}>
-                <Text style={styles.recRate}>{getRewardDisplay(localTop.rewardRate, localTop.rewardType)}</Text>
-                <Text style={styles.recRateLabel}>at {selectedCategory ? CATEGORY_META[selectedCategory].label : ''}</Text>
-              </GlassContainer>
-            </View>
-          )}
 
           {/* Comparison */}
           {scores.length > 1 && (
@@ -263,7 +247,7 @@ export default function RecommendScreen() {
             <View style={styles.usedCards}>
               {scores.map((s) => {
                 const colors = CARD_COLOR_SCHEMES[s.card.colorScheme] ?? CARD_COLOR_SCHEMES.sapphire;
-                const isAiPick = s.card.id === aiResult?.points?.cardId || s.card.id === aiResult?.cashback?.cardId;
+                const isTopPick = s.card.id === localCashbackTop?.card.id || s.card.id === localPointsTop?.card.id;
                 return (
                   <TouchableOpacity
                     key={s.card.id}
@@ -275,14 +259,14 @@ export default function RecommendScreen() {
                       colors={[colors[0], colors[1]]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
-                      style={[styles.usedCardGrad, isAiPick && styles.usedCardAiPick]}
+                      style={[styles.usedCardGrad, isTopPick && styles.usedCardAiPick]}
                     >
                       <Text style={styles.usedCardName} numberOfLines={1}>
                         {s.card.nickname}
                       </Text>
                       <Text style={styles.usedCardRate}>
                         {getRewardDisplay(s.rewardRate, s.rewardType)}
-                        {isAiPick ? ' 🤖' : s.isRecommended ? ' ⭐' : ''}
+                        {isTopPick ? ' ⭐' : ''}
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>

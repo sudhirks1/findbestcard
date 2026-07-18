@@ -4,7 +4,7 @@ import {
   ScrollView, StatusBar, Alert, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSubscriptionStore } from '../store/useSubscriptionStore';
 import { useCardStore } from '../store/useCardStore';
 import { COLORS } from '../utils/constants';
@@ -18,14 +18,18 @@ const COMMON_SERVICES = [
 
 export default function AddSubscriptionScreen() {
   const router = useRouter();
-  const { addSubscription } = useSubscriptionStore();
+  const { subId } = useLocalSearchParams<{ subId?: string }>();
+  const { addSubscription, updateSubscription, subscriptions } = useSubscriptionStore();
   const { cards } = useCardStore();
 
-  const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [period, setPeriod] = useState<'monthly' | 'annual'>('monthly');
-  const [cardId, setCardId] = useState<string | undefined>();
-  const [notes, setNotes] = useState('');
+  const editingSub = subId ? subscriptions.find((s) => s.id === subId) : undefined;
+  const isEditing = !!editingSub;
+
+  const [name, setName] = useState(editingSub?.name ?? '');
+  const [amount, setAmount] = useState(editingSub ? String(editingSub.amount) : '');
+  const [period, setPeriod] = useState<'monthly' | 'annual'>(editingSub?.period ?? 'monthly');
+  const [cardId, setCardId] = useState<string | undefined>(editingSub?.cardId);
+  const [notes, setNotes] = useState(editingSub?.notes ?? '');
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -33,7 +37,11 @@ export default function AddSubscriptionScreen() {
     const amt = parseFloat(amount);
     if (isNaN(amt) || amt <= 0) { Alert.alert('Required', 'Please enter a valid amount.'); return; }
     setSaving(true);
-    await addSubscription({ name: name.trim(), amount: amt, period, cardId, notes: notes.trim() || undefined });
+    if (isEditing && editingSub) {
+      await updateSubscription(editingSub.id, { name: name.trim(), amount: amt, period, cardId, notes: notes.trim() || undefined });
+    } else {
+      await addSubscription({ name: name.trim(), amount: amt, period, cardId, notes: notes.trim() || undefined });
+    }
     router.back();
   };
 
@@ -45,7 +53,7 @@ export default function AddSubscriptionScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.cancelBtn}>
             <Text style={styles.cancelText}>Cancel</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>Add Subscription</Text>
+          <Text style={styles.title}>{isEditing ? 'Edit Subscription' : 'Add Subscription'}</Text>
           <TouchableOpacity onPress={handleSave} style={styles.saveBtn} disabled={saving}>
             <Text style={styles.saveText}>Save</Text>
           </TouchableOpacity>

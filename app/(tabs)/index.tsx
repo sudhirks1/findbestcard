@@ -166,10 +166,12 @@ export default function WalletScreen() {
                         <TouchableOpacity
                           key={sub.id}
                           style={styles.subRow}
+                          onPress={() => router.push({ pathname: '/add-subscription', params: { subId: sub.id } } as any)}
                           onLongPress={() =>
-                            Alert.alert(sub.name, 'Remove this subscription?', [
-                              { text: 'Cancel', style: 'cancel' },
+                            Alert.alert(sub.name, 'What would you like to do?', [
+                              { text: 'Edit', onPress: () => router.push({ pathname: '/add-subscription', params: { subId: sub.id } } as any) },
                               { text: 'Remove', style: 'destructive', onPress: () => deleteSubscription(sub.id) },
+                              { text: 'Cancel', style: 'cancel' },
                             ])
                           }
                           activeOpacity={0.75}
