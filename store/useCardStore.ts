@@ -15,8 +15,8 @@ interface CardStore {
   cards: CreditCard[];
   isLoading: boolean;
   hasSeeded: boolean;
-  localUserId: string | null;
   fetchFromServer: () => Promise<void>;
+  clearCards: () => void;
   addCard: (card: Omit<CreditCard, 'id' | 'createdAt'>) => Promise<void>;
   updateCard: (id: string, updates: Partial<Omit<CreditCard, 'id' | 'createdAt'>>) => Promise<void>;
   deleteCard: (id: string) => Promise<void>;
@@ -37,27 +37,17 @@ export const useCardStore = create<CardStore>()(
       cards: [],
       isLoading: false,
       hasSeeded: false,
-      localUserId: null,
+
+      clearCards: () => set({ cards: [], hasSeeded: false }),
 
       fetchFromServer: async () => {
         const token = getToken();
         if (!token) return;
-        const { useAuthStore } = require('./useAuthStore');
-        const currentUserId = useAuthStore.getState().userId;
         set({ isLoading: true });
         try {
           const serverCards = await api.getWallet(token);
-          const isSameUser = currentUserId && currentUserId === get().localUserId;
-          if (serverCards.length === 0 && get().cards.length > 0 && isSameUser) {
-            // Same user, server is empty (e.g. data lost) — restore from local cache
-            const dtos = get().cards.map((c, i) => api.localCardToServer(c, i));
-            const synced = await api.syncWallet(token, dtos);
-            set({ cards: synced.map(api.serverCardToLocal), hasSeeded: true, localUserId: currentUserId });
-          } else {
-            // Different user or server has data — always use server as source of truth
-            set({ cards: serverCards.map(api.serverCardToLocal), hasSeeded: true, localUserId: currentUserId });
-          }
-        } catch (e) {
+          set({ cards: serverCards.map(api.serverCardToLocal), hasSeeded: true });
+        } catch {
           // Keep local cache on network failure
         } finally {
           set({ isLoading: false });

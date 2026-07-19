@@ -63,7 +63,13 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      logout: () => set({ token: null, userId: null, email: null, displayName: null, role: null }),
+      logout: () => {
+        try {
+          const { useCardStore } = require('./useCardStore');
+          useCardStore.getState().clearCards();
+        } catch {}
+        set({ token: null, userId: null, email: null, displayName: null, role: null });
+      },
     }),
     {
       name: 'auth-store-v2',
