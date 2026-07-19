@@ -33,6 +33,33 @@ const columnToCategory: Record<string, StoreCategory> = {
   wholesaleRate: 'wholesale',
 };
 
+// Infer card network from name + issuer.
+// Returns null when ambiguous (let stored/selected value win).
+// Always returns definitively for Amex and Discover.
+function inferNetwork(name: string, issuer?: string): 'visa' | 'mastercard' | 'amex' | 'discover' | null {
+  const n = (name + ' ' + (issuer ?? '')).toLowerCase();
+  if (n.includes('amex') || n.includes('american express')) return 'amex';
+  if (n.includes('discover')) return 'discover';
+  if (
+    n.includes('mastercard') ||
+    n.includes('world elite') ||
+    n.includes('freedom flex') ||
+    n.includes('robinhood') ||
+    n.includes('bilt') ||
+    n.includes('savor') ||          // Capital One SavorOne/Savor
+    n.includes('spark') ||          // Capital One Spark
+    n.includes('citi double cash') ||
+    n.includes('citi custom cash') ||
+    n.includes('citi rewards') ||
+    n.includes('citi simplicity') ||
+    n.includes('citi strata') ||
+    n.includes('citi aadvantage') ||
+    n.includes('alliant') ||
+    n.includes('dcu')
+  ) return 'mastercard';
+  return null; // ambiguous — trust stored value or UI selection
+}
+
 async function apiFetch(path: string, options: RequestInit = {}, token?: string): Promise<any> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -68,7 +95,7 @@ export function serverCardToLocal(s: any): CreditCard {
     nickname: s.nickname,
     bank: s.issuer,
     lastFour: s.lastFour || '',
-    network: s.network || 'visa',
+    network: inferNetwork(s.nickname, s.issuer) ?? s.network ?? 'visa',
     colorScheme: s.colorScheme || 'sapphire',
     rewards,
     baseReward: Number(s.baseRewardRate || 1),
@@ -267,6 +294,7 @@ export function serverTemplateToAutofill(t: any) {
     templateId: t.id,
     name: t.name,
     bank: t.issuer,
+    network: inferNetwork(t.name, t.issuer) ?? 'visa',
     colorScheme: t.colorScheme || 'sapphire',
     annualFee: Number(t.annualFee || 0),
     baseReward: Number(t.baseRewardRate || 1),

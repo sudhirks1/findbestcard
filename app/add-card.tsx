@@ -228,6 +228,7 @@ export default function AddCardScreen() {
                   const t = autoFillSuggestion!;
                   setNickname(t.name);
                   setBank(t.bank);
+                  if (t.network) setNetwork(t.network as CardNetwork);
                   setColorScheme(t.colorScheme);
                   setAnnualFee(String(t.annualFee));
                   setBaseReward(String(t.baseReward));
@@ -263,6 +264,7 @@ export default function AddCardScreen() {
                   const t = aiSuggestion!;
                   setNickname(t.name);
                   setBank(t.bank);
+                  if (t.network) setNetwork(t.network as CardNetwork);
                   setColorScheme(t.colorScheme);
                   setAnnualFee(String(t.annualFee));
                   setBaseReward(String(t.baseReward));
