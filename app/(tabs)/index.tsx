@@ -148,7 +148,9 @@ export default function WalletScreen() {
             {/* Subscriptions — always shown, even when no cards */}
             <View style={styles.subSection}>
               <View style={styles.subHeader}>
-                <Text style={styles.subTitle}>Subscriptions & Auto Payments</Text>
+                <View style={{ flex: 1, marginRight: 12 }}>
+                  <Text style={styles.subTitle}>Subscriptions & Auto Payments</Text>
+                </View>
                 <TouchableOpacity onPress={() => router.push('/add-subscription' as any)} style={styles.subAddBtn}>
                   <Text style={styles.subAddText}>+ Add</Text>
                 </TouchableOpacity>
@@ -253,7 +255,6 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 24, paddingBottom: 40 },
   hint: { color: COLORS.textMuted, fontSize: 12 },
   subSection: {
-    marginHorizontal: 24,
     marginBottom: 40,
     borderTopWidth: 1,
     borderTopColor: COLORS.surfaceBorder,
