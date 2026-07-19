@@ -20,6 +20,7 @@ type Template = {
   id: string;
   name: string;
   issuer: string;
+  network: string;
   rewardType: string;
   baseRewardRate: number;
   diningRate: number;
@@ -55,9 +56,12 @@ const RATE_FIELDS: { key: keyof Template; label: string }[] = [
   { key: 'wholesaleRate', label: 'Wholesale' },
 ];
 
+const NETWORKS = ['visa', 'mastercard', 'amex', 'discover'];
+
 const EMPTY_TEMPLATE: Omit<Template, 'id' | 'isActive'> = {
   name: '',
   issuer: '',
+  network: '',
   rewardType: 'cashback',
   baseRewardRate: 1,
   diningRate: 0,
@@ -262,6 +266,22 @@ export default function AdminScreen() {
               placeholder="Issuer (e.g. Chase)"
               placeholderTextColor={COLORS.textMuted}
             />
+
+            <Text style={styles.sectionLabel}>Network</Text>
+            <View style={styles.chipRow}>
+              {NETWORKS.map((n) => (
+                <TouchableOpacity
+                  key={n}
+                  style={[styles.chip, editing?.network === n && styles.chipActive]}
+                  onPress={() => setField('network', n)}
+                >
+                  <Text style={[styles.chipText, editing?.network === n && styles.chipTextActive]}>
+                    {n.charAt(0).toUpperCase() + n.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
             <TextInput
               style={styles.field}
               value={String(editing?.annualFee ?? 0)}
@@ -384,6 +404,18 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginTop: 8,
   },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.surfaceBorder,
+  },
+  chipActive: { backgroundColor: COLORS.accent, borderColor: COLORS.accent },
+  chipText: { color: COLORS.textSecondary, fontSize: 13, fontWeight: '600' },
+  chipTextActive: { color: '#FFF' },
   field: {
     backgroundColor: COLORS.surface,
     color: COLORS.textPrimary,

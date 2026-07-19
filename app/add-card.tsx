@@ -53,7 +53,7 @@ export default function AddCardScreen() {
 
   // Backend card templates for autofill
   const [catalogTemplates, setCatalogTemplates] = useState<any[]>([]);
-  const [autoFillSuggestion, setAutoFillSuggestion] = useState<ReturnType<typeof api.serverTemplateToAutofill> | null>(null);
+  const [autoFillMatches, setAutoFillMatches] = useState<ReturnType<typeof api.serverTemplateToAutofill>[]>([]);
   const [aiSuggestion, setAiSuggestion] = useState<ReturnType<typeof api.serverTemplateToAutofill> | null>(null);
   const [aiLookupLoading, setAiLookupLoading] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | undefined>(editingCard?.templateId);
@@ -63,21 +63,37 @@ export default function AddCardScreen() {
     api.getCardTemplates().then(setCatalogTemplates).catch(() => {});
   }, []);
 
-  function findTemplate(query: string) {
+  function findTemplates(query: string): ReturnType<typeof api.serverTemplateToAutofill>[] {
     const lower = query.toLowerCase().trim();
-    if (!lower || catalogTemplates.length === 0) return null;
-    // exact name/issuer substring match first
-    let found = catalogTemplates.find(
+    if (!lower || catalogTemplates.length === 0) return [];
+    // substring match: query contains template name or template name contains query
+    let matches = catalogTemplates.filter(
       (t) => t.name.toLowerCase().includes(lower) || lower.includes(t.name.toLowerCase())
     );
-    if (!found) {
-      // fuzzy: 2+ words of name appear in query
-      found = catalogTemplates.find((t) => {
+    if (matches.length === 0) {
+      // fuzzy: 2+ significant words from the template name appear in the query
+      matches = catalogTemplates.filter((t) => {
         const words = t.name.toLowerCase().split(' ').filter((w: string) => w.length > 3);
         return words.filter((w: string) => lower.includes(w)).length >= 2;
       });
     }
-    return found ? api.serverTemplateToAutofill(found) : null;
+    return matches.map(api.serverTemplateToAutofill);
+  }
+
+  function applyTemplate(t: ReturnType<typeof api.serverTemplateToAutofill>) {
+    setNickname(t.name);
+    setBank(t.bank);
+    if (t.network) setNetwork(t.network as CardNetwork);
+    setColorScheme(t.colorScheme);
+    setAnnualFee(String(t.annualFee));
+    setBaseReward(String(t.baseReward));
+    setBaseRewardType(t.baseRewardType as RewardType);
+    setCategoryRewards(t.rewards as CategoryReward[]);
+    setSelectedTemplateId(t.templateId);
+    setHasQuarterlyRotating(t.hasQuarterlyRotatingRewards ?? false);
+    setRequiresPrime(t.requiresPrimeMembership ?? false);
+    setAutoFillMatches([]);
+    setAiSuggestion(null);
   }
 
   // Basic info
@@ -199,13 +215,13 @@ export default function AddCardScreen() {
                   setNickname(text);
                   if (isEditing) return;
 
-                  const catalogMatch = findTemplate(text);
-                  setAutoFillSuggestion(catalogMatch);
+                  const matches = findTemplates(text);
+                  setAutoFillMatches(matches);
                   setAiSuggestion(null);
 
                   if (aiDebounceRef.current) clearTimeout(aiDebounceRef.current);
 
-                  if (!catalogMatch && text.trim().length > 4 && token) {
+                  if (matches.length === 0 && text.trim().length > 4 && token) {
                     aiDebounceRef.current = setTimeout(async () => {
                       setAiLookupLoading(true);
                       const result = await api.aiLookupCard(token, text.trim());
@@ -221,60 +237,41 @@ export default function AddCardScreen() {
               />
             </Field>
 
-            {autoFillSuggestion && !isEditing && (
-              <TouchableOpacity
-                style={styles.autoFillBanner}
-                onPress={() => {
-                  const t = autoFillSuggestion!;
-                  setNickname(t.name);
-                  setBank(t.bank);
-                  if (t.network) setNetwork(t.network as CardNetwork);
-                  setColorScheme(t.colorScheme);
-                  setAnnualFee(String(t.annualFee));
-                  setBaseReward(String(t.baseReward));
-                  setBaseRewardType(t.baseRewardType as RewardType);
-                  setCategoryRewards(t.rewards as CategoryReward[]);
-                  setSelectedTemplateId(t.templateId);
-                  setHasQuarterlyRotating(t.hasQuarterlyRotatingRewards ?? false);
-                  setRequiresPrime(t.requiresPrimeMembership ?? false);
-                  setAutoFillSuggestion(null);
-                }}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.autoFillIcon}>✨</Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.autoFillTitle}>Found: {autoFillSuggestion.name}</Text>
-                  <Text style={styles.autoFillSub}>Tap to auto-fill rewards — you can edit after</Text>
-                </View>
-                <Text style={styles.autoFillChevron}>→</Text>
-              </TouchableOpacity>
+            {/* Catalog matches — list so user can pick the right card */}
+            {autoFillMatches.length > 0 && !isEditing && (
+              <View style={styles.matchList}>
+                <Text style={styles.matchListLabel}>
+                  {autoFillMatches.length === 1 ? 'Found in catalog — tap to auto-fill:' : `${autoFillMatches.length} cards found — pick one to auto-fill:`}
+                </Text>
+                {autoFillMatches.map((t) => (
+                  <TouchableOpacity
+                    key={t.templateId}
+                    style={styles.matchItem}
+                    onPress={() => applyTemplate(t)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.autoFillIcon}>✨</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.matchItemName}>{t.name}</Text>
+                      <Text style={styles.matchItemSub}>{t.bank} · {t.baseRewardType === 'cashback' ? `${t.baseReward}% back` : `${t.baseReward}x pts/miles`}</Text>
+                    </View>
+                    <Text style={styles.autoFillChevron}>→</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             )}
 
-            {aiLookupLoading && !autoFillSuggestion && !isEditing && (
+            {aiLookupLoading && autoFillMatches.length === 0 && !isEditing && (
               <View style={styles.aiLoadingBanner}>
                 <ActivityIndicator size="small" color="#F59E0B" />
                 <Text style={styles.aiLoadingText}>Searching AI for card rates...</Text>
               </View>
             )}
 
-            {aiSuggestion && !autoFillSuggestion && !isEditing && (
+            {aiSuggestion && autoFillMatches.length === 0 && !isEditing && (
               <TouchableOpacity
                 style={styles.aiBanner}
-                onPress={() => {
-                  const t = aiSuggestion!;
-                  setNickname(t.name);
-                  setBank(t.bank);
-                  if (t.network) setNetwork(t.network as CardNetwork);
-                  setColorScheme(t.colorScheme);
-                  setAnnualFee(String(t.annualFee));
-                  setBaseReward(String(t.baseReward));
-                  setBaseRewardType(t.baseRewardType as RewardType);
-                  setCategoryRewards(t.rewards as CategoryReward[]);
-                  setSelectedTemplateId(t.templateId);
-                  setHasQuarterlyRotating(t.hasQuarterlyRotatingRewards ?? false);
-                  setRequiresPrime(t.requiresPrimeMembership ?? false);
-                  setAiSuggestion(null);
-                }}
+                onPress={() => applyTemplate(aiSuggestion!)}
                 activeOpacity={0.85}
               >
                 <Text style={styles.aiBannerIcon}>🤖</Text>
@@ -870,6 +867,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#34D399',
   },
+  matchList: {
+    gap: 8,
+  },
+  matchListLabel: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  matchItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: 'rgba(52,211,153,0.08)',
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#34D399',
+  },
+  matchItemName: { color: '#34D399', fontSize: 14, fontWeight: '700' },
+  matchItemSub: { color: COLORS.textMuted, fontSize: 11, marginTop: 2 },
   autoFillIcon: { fontSize: 22 },
   autoFillTitle: { color: '#34D399', fontSize: 14, fontWeight: '700' },
   autoFillSub: { color: COLORS.textMuted, fontSize: 11, marginTop: 2 },

@@ -44,7 +44,6 @@ function inferNetwork(name: string, issuer?: string): 'visa' | 'mastercard' | 'a
     n.includes('mastercard') ||
     n.includes('world elite') ||
     n.includes('freedom flex') ||
-    n.includes('robinhood') ||
     n.includes('bilt') ||
     n.includes('savor') ||          // Capital One SavorOne/Savor
     n.includes('spark') ||          // Capital One Spark
@@ -57,6 +56,7 @@ function inferNetwork(name: string, issuer?: string): 'visa' | 'mastercard' | 'a
     n.includes('alliant') ||
     n.includes('dcu')
   ) return 'mastercard';
+  // Robinhood Gold Card is Visa (Coastal Community Bank)
   return null; // ambiguous — trust stored value or UI selection
 }
 
@@ -294,7 +294,7 @@ export function serverTemplateToAutofill(t: any) {
     templateId: t.id,
     name: t.name,
     bank: t.issuer,
-    network: inferNetwork(t.name, t.issuer) ?? 'visa',
+    network: t.network || inferNetwork(t.name, t.issuer) || 'visa',
     colorScheme: t.colorScheme || 'sapphire',
     annualFee: Number(t.annualFee || 0),
     baseReward: Number(t.baseRewardRate || 1),
