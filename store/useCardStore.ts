@@ -46,7 +46,15 @@ export const useCardStore = create<CardStore>()(
         set({ isLoading: true });
         try {
           const serverCards = await api.getWallet(token);
-          set({ cards: serverCards.map(api.serverCardToLocal), hasSeeded: true });
+          if (serverCards.length > 0) {
+            // Server has cards — always authoritative
+            set({ cards: serverCards.map(api.serverCardToLocal), hasSeeded: true });
+          } else if (!get().hasSeeded) {
+            // Genuinely new/empty account
+            set({ cards: [], hasSeeded: true });
+          }
+          // If server returns 0 and we already have local data, keep it —
+          // could be a stale token from a different account session
         } catch {
           // Keep local cache on network failure
         } finally {

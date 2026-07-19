@@ -68,6 +68,10 @@ export const useAuthStore = create<AuthState>()(
           const { useCardStore } = require('./useCardStore');
           useCardStore.getState().clearCards();
         } catch {}
+        try {
+          const { useSubscriptionStore } = require('./useSubscriptionStore');
+          useSubscriptionStore.getState().clearSubscriptions();
+        } catch {}
         set({ token: null, userId: null, email: null, displayName: null, role: null });
       },
     }),

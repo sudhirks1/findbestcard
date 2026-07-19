@@ -35,6 +35,7 @@ function serverToLocal(s: any): Subscription {
 interface SubscriptionStore {
   subscriptions: Subscription[];
   fetchFromServer: () => Promise<void>;
+  clearSubscriptions: () => void;
   addSubscription: (sub: Omit<Subscription, 'id' | 'createdAt'>) => Promise<void>;
   updateSubscription: (id: string, updates: Partial<Omit<Subscription, 'id' | 'createdAt'>>) => Promise<void>;
   deleteSubscription: (id: string) => Promise<void>;
@@ -45,18 +46,18 @@ export const useSubscriptionStore = create<SubscriptionStore>()(
     (set, get) => ({
       subscriptions: [],
 
+      clearSubscriptions: () => set({ subscriptions: [] }),
+
       fetchFromServer: async () => {
         const token = getToken();
         if (!token) return;
         try {
           const data = await api.getSubscriptions(token);
-          if (data.length === 0 && get().subscriptions.length > 0) {
-            // First login: push local subs to server
-            const saved = await api.syncSubscriptions(token, get().subscriptions);
-            set({ subscriptions: saved.map(serverToLocal) });
-          } else {
+          if (data.length > 0) {
+            // Server has data — always authoritative
             set({ subscriptions: data.map(serverToLocal) });
           }
+          // If server returns 0, keep local cache — could be a wrong/stale token
         } catch {}
       },
 
