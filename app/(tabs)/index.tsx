@@ -114,98 +114,97 @@ export default function WalletScreen() {
         </View>
       </View>
 
-      {cards.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyEmoji}>💳</Text>
-          <Text style={styles.emptyTitle}>No cards yet</Text>
-          <Text style={styles.emptySub}>Add your credit cards to start maximising rewards at every store</Text>
-          <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/add-card')} activeOpacity={0.8}>
-            <Text style={styles.emptyBtnText}>Add Your First Card</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <FlatList
-          data={cards}
-          keyExtractor={(c) => c.id}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item, index }) => (
-            <View style={index < cards.length - 1 ? { marginBottom: -CARD_OVERLAP } : undefined}>
-              <AnimatedCard
-                card={item}
-                index={index}
-                onPress={() => router.push(`/card/${item.id}`)}
-                onLongPress={() => handleLongPress(item)}
-              />
-            </View>
-          )}
-          ListFooterComponent={
-            <View style={{ marginTop: CARD_OVERLAP + 24 }}>
+      <FlatList
+        data={cards}
+        keyExtractor={(c) => c.id}
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+        renderItem={({ item, index }) => (
+          <View style={index < cards.length - 1 ? { marginBottom: -CARD_OVERLAP } : undefined}>
+            <AnimatedCard
+              card={item}
+              index={index}
+              onPress={() => router.push(`/card/${item.id}`)}
+              onLongPress={() => handleLongPress(item)}
+            />
+          </View>
+        )}
+        ListEmptyComponent={
+          <View style={styles.emptyCards}>
+            <Text style={styles.emptyEmoji}>💳</Text>
+            <Text style={styles.emptyTitle}>No cards yet</Text>
+            <Text style={styles.emptySub}>Add your credit cards to start maximising rewards at every store</Text>
+            <TouchableOpacity style={styles.emptyBtn} onPress={() => router.push('/add-card')} activeOpacity={0.8}>
+              <Text style={styles.emptyBtnText}>Add Your First Card</Text>
+            </TouchableOpacity>
+          </View>
+        }
+        ListFooterComponent={
+          <View style={{ marginTop: cards.length > 0 ? CARD_OVERLAP + 24 : 0 }}>
+            {cards.length > 0 && (
               <Text style={[styles.hint, { textAlign: 'center', marginBottom: 24 }]}>Tap a card to view details  •  Hold to manage</Text>
+            )}
 
-              {/* Subscriptions section */}
-              <View style={styles.subSection}>
-                <View style={styles.subHeader}>
-                  <Text style={styles.subTitle}>Subscriptions & Auto Payments</Text>
-                  <TouchableOpacity onPress={() => router.push('/add-subscription' as any)} style={styles.subAddBtn}>
-                    <Text style={styles.subAddText}>+ Add</Text>
-                  </TouchableOpacity>
-                </View>
-                {subscriptions.length === 0 ? (
-                  <TouchableOpacity style={styles.subEmpty} onPress={() => router.push('/add-subscription' as any)} activeOpacity={0.75}>
-                    <Text style={styles.subEmptyText}>Track Netflix, Spotify, Amazon Prime, utilities and more — see which cards earn the most on your recurring bills and auto payments.</Text>
-                    <Text style={styles.subEmptyLink}>+ Add subscription or payment</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <>
-                    {[...subscriptions].sort((a, b) => {
-                      const aYr = a.period === 'monthly' ? a.amount * 12 : a.amount;
-                      const bYr = b.period === 'monthly' ? b.amount * 12 : b.amount;
-                      return bYr - aYr;
-                    }).map((sub) => {
-                      const monthly = sub.period === 'annual' ? sub.amount / 12 : sub.amount;
-                      const annual = sub.period === 'monthly' ? sub.amount * 12 : sub.amount;
-                      const payingCard = cards.find((c) => c.id === sub.cardId);
-                      return (
-                        <TouchableOpacity
-                          key={sub.id}
-                          style={styles.subRow}
-                          onPress={() => router.push({ pathname: '/add-subscription', params: { subId: sub.id } } as any)}
-                          onLongPress={() =>
-                            Alert.alert(sub.name, 'What would you like to do?', [
-                              { text: 'Edit', onPress: () => router.push({ pathname: '/add-subscription', params: { subId: sub.id } } as any) },
-                              { text: 'Remove', style: 'destructive', onPress: () => deleteSubscription(sub.id) },
-                              { text: 'Cancel', style: 'cancel' },
-                            ])
-                          }
-                          activeOpacity={0.75}
-                        >
-                          <View style={styles.subRowLeft}>
-                            <Text style={styles.subName}>{sub.name}</Text>
-                            {payingCard && <Text style={styles.subCard}>{payingCard.nickname}</Text>}
-                          </View>
-                          <View style={styles.subRowRight}>
-                            <Text style={styles.subAmount}>${monthly.toFixed(2)}/mo</Text>
-                            <Text style={styles.subAnnual}>${annual.toFixed(0)}/yr</Text>
-                          </View>
-                        </TouchableOpacity>
-                      );
-                    })}
-                    {subscriptions.length > 0 && (
-                      <View style={styles.subTotal}>
-                        <Text style={styles.subTotalLabel}>Total</Text>
-                        <Text style={styles.subTotalAmount}>
-                          ${subscriptions.reduce((s, sub) => s + (sub.period === 'monthly' ? sub.amount * 12 : sub.amount), 0).toFixed(0)}/yr
-                        </Text>
-                      </View>
-                    )}
-                  </>
-                )}
+            {/* Subscriptions — always shown, even when no cards */}
+            <View style={styles.subSection}>
+              <View style={styles.subHeader}>
+                <Text style={styles.subTitle}>Subscriptions & Auto Payments</Text>
+                <TouchableOpacity onPress={() => router.push('/add-subscription' as any)} style={styles.subAddBtn}>
+                  <Text style={styles.subAddText}>+ Add</Text>
+                </TouchableOpacity>
               </View>
+              {subscriptions.length === 0 ? (
+                <TouchableOpacity style={styles.subEmpty} onPress={() => router.push('/add-subscription' as any)} activeOpacity={0.75}>
+                  <Text style={styles.subEmptyText}>Track Netflix, Spotify, Amazon Prime, utilities and more — see which cards earn the most on your recurring bills and auto payments.</Text>
+                  <Text style={styles.subEmptyLink}>+ Add subscription or payment</Text>
+                </TouchableOpacity>
+              ) : (
+                <>
+                  {[...subscriptions].sort((a, b) => {
+                    const aYr = a.period === 'monthly' ? a.amount * 12 : a.amount;
+                    const bYr = b.period === 'monthly' ? b.amount * 12 : b.amount;
+                    return bYr - aYr;
+                  }).map((sub) => {
+                    const monthly = sub.period === 'annual' ? sub.amount / 12 : sub.amount;
+                    const annual = sub.period === 'monthly' ? sub.amount * 12 : sub.amount;
+                    const payingCard = cards.find((c) => c.id === sub.cardId);
+                    return (
+                      <TouchableOpacity
+                        key={sub.id}
+                        style={styles.subRow}
+                        onPress={() => router.push({ pathname: '/add-subscription', params: { subId: sub.id } } as any)}
+                        onLongPress={() =>
+                          Alert.alert(sub.name, 'What would you like to do?', [
+                            { text: 'Edit', onPress: () => router.push({ pathname: '/add-subscription', params: { subId: sub.id } } as any) },
+                            { text: 'Remove', style: 'destructive', onPress: () => deleteSubscription(sub.id) },
+                            { text: 'Cancel', style: 'cancel' },
+                          ])
+                        }
+                        activeOpacity={0.75}
+                      >
+                        <View style={styles.subRowLeft}>
+                          <Text style={styles.subName}>{sub.name}</Text>
+                          {payingCard && <Text style={styles.subCard}>{payingCard.nickname}</Text>}
+                        </View>
+                        <View style={styles.subRowRight}>
+                          <Text style={styles.subAmount}>${monthly.toFixed(2)}/mo</Text>
+                          <Text style={styles.subAnnual}>${annual.toFixed(0)}/yr</Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                  <View style={styles.subTotal}>
+                    <Text style={styles.subTotalLabel}>Total</Text>
+                    <Text style={styles.subTotalAmount}>
+                      ${subscriptions.reduce((s, sub) => s + (sub.period === 'monthly' ? sub.amount * 12 : sub.amount), 0).toFixed(0)}/yr
+                    </Text>
+                  </View>
+                </>
+              )}
             </View>
-          }
-        />
-      )}
+          </View>
+        }
+      />
     </LinearGradient>
   );
 }
@@ -299,12 +298,11 @@ const styles = StyleSheet.create({
   },
   subTotalLabel: { color: COLORS.textSecondary, fontSize: 13, fontWeight: '600' },
   subTotalAmount: { color: COLORS.accentLight, fontSize: 13, fontWeight: '700' },
-  empty: {
-    flex: 1,
+  emptyCards: {
     alignItems: 'center',
-    justifyContent: 'center',
     paddingHorizontal: 40,
-    paddingBottom: 100,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
   emptyEmoji: { fontSize: 72, marginBottom: 20 },
   emptyTitle: { color: COLORS.textPrimary, fontSize: 26, fontWeight: '800', marginBottom: 10 },
